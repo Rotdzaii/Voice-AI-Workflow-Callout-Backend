@@ -1,0 +1,5 @@
+# Optional heavy dependencies for advanced NLP
+# Install only when needed on a GPU-enabled environment
+transformers>=4.44.0
+torch>=2.3.0
+supabase

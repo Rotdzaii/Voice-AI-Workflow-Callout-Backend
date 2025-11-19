@@ -1,0 +1,23 @@
+{
+  "$schema": "https://railway.app/schema.json",
+  "build": {
+    "builder": "NIXPACKS"
+  },
+  "deploy": {
+    "healthcheckPath": "/health",
+    "restartPolicyType": "ON_FAILURE"
+  },
+  "services": {
+    "voiceai-backend": {
+      "env": {
+        "APP_ENV": "production"
+      },
+      "ports": [
+        {
+          "port": 8000,
+          "protocol": "TCP"
+        }
+      ]
+    }
+  }
+}
