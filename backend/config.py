@@ -46,3 +46,4 @@ SECRET_KEY = env_str("SECRET_KEY") or os.getenv("JWT_SECRET") or "dev-secret-cha
 STATE_COOKIE_NAME = "oauth_state"
 NONCE_COOKIE_NAME = "oauth_nonce"
 COOKIE_MAX_AGE_SECONDS = int(env_int("OAUTH_COOKIE_MAX_AGE", 600) or 600)
+CODE_VERIFIER_COOKIE_NAME = "oauth_code_verifier"

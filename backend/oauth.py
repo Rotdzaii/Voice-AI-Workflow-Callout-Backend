@@ -7,7 +7,7 @@ from typing import Optional, Tuple, Dict, Any
 import httpx
 from jose import jwt, JWTError
 
-from .config import env_str, SECRET_KEY, STATE_COOKIE_NAME, NONCE_COOKIE_NAME, COOKIE_MAX_AGE_SECONDS
+from .config import env_str, SECRET_KEY, STATE_COOKIE_NAME, NONCE_COOKIE_NAME, COOKIE_MAX_AGE_SECONDS, CODE_VERIFIER_COOKIE_NAME
 from . import auth
 
 
@@ -74,9 +74,44 @@ def verify_cookies(state_cookie: Optional[str], nonce_cookie: Optional[str], sta
     return ok_state and ok_nonce
 
 
+def set_code_verifier_cookie(response, code_verifier: str):
+    response.set_cookie(
+        CODE_VERIFIER_COOKIE_NAME,
+        _sign(code_verifier),
+        max_age=COOKIE_MAX_AGE_SECONDS,
+        httponly=True,
+        samesite="lax",
+        secure=False,
+    )
+
+
+def extract_signed_code_verifier(raw_cookie: Optional[str]) -> Optional[str]:
+    if not raw_cookie:
+        return None
+    try:
+        val, sig = raw_cookie.split("|", 1)
+    except ValueError:
+        return None
+    calc = hmac.new(SECRET_KEY.encode("utf-8"), msg=val.encode("utf-8"), digestmod=hashlib.sha256).hexdigest()
+    if hmac.compare_digest(sig, calc):
+        return val
+    return None
+
+
 # -------------------- Google OAuth --------------------
 
-def google_auth_url() -> Tuple[str, str, str]:
+def _code_verifier() -> str:
+    # RFC 7636: length 43-128 chars allowed; use 64
+    return secrets.token_urlsafe(64)
+
+
+def _code_challenge(verifier: str) -> str:
+    digest = hashlib.sha256(verifier.encode("ascii")).digest()
+    import base64
+    return base64.urlsafe_b64encode(digest).decode("ascii").rstrip("=")
+
+
+def google_auth_url() -> Tuple[str, str, str, str]:
     client_id = env_str("GOOGLE_CLIENT_ID")
     redirect_uri = env_str("GOOGLE_REDIRECT_URI")
     if not client_id or not redirect_uri:
@@ -84,6 +119,8 @@ def google_auth_url() -> Tuple[str, str, str]:
     scope = "openid email profile"
     state = build_state("google")
     nonce = secrets.token_urlsafe(12)
+    code_verifier = _code_verifier()
+    code_challenge = _code_challenge(code_verifier)
     from urllib.parse import urlencode
     params = urlencode({
         "client_id": client_id,
@@ -94,11 +131,13 @@ def google_auth_url() -> Tuple[str, str, str]:
         "prompt": "consent",
         "state": state,
         "nonce": nonce,
+        "code_challenge": code_challenge,
+        "code_challenge_method": "S256",
     })
-    return f"https://accounts.google.com/o/oauth2/v2/auth?{params}", state, nonce
+    return f"https://accounts.google.com/o/oauth2/v2/auth?{params}", state, nonce, code_verifier
 
 
-async def google_exchange_code(code: str) -> Dict[str, Any]:
+async def google_exchange_code(code: str, code_verifier: Optional[str]) -> Dict[str, Any]:
     client_id = env_str("GOOGLE_CLIENT_ID")
     client_secret = env_str("GOOGLE_CLIENT_SECRET")
     redirect_uri = env_str("GOOGLE_REDIRECT_URI")
@@ -113,6 +152,7 @@ async def google_exchange_code(code: str) -> Dict[str, Any]:
                 "code": code,
                 "redirect_uri": redirect_uri,
                 "grant_type": "authorization_code",
+                **({"code_verifier": code_verifier} if code_verifier else {}),
             },
             headers={"Accept": "application/json"},
         )

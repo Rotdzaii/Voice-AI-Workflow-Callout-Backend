@@ -104,10 +104,11 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
 @app.get("/auth/oauth/google/start")
 async def oauth_google_start():
     try:
-        url, state, nonce = oauth.google_auth_url()
+        url, state, nonce, code_verifier = oauth.google_auth_url()
         resp = RedirectResponse(url)
         oauth.set_state_cookie(resp, state)
         oauth.set_nonce_cookie(resp, nonce)
+        oauth.set_code_verifier_cookie(resp, code_verifier)
         return resp
     except Exception as e:
         return JSONResponse({"error": str(e)}, status_code=503)
@@ -122,8 +123,10 @@ async def oauth_google_callback(request: Request, code: str | None = None, state
     nonce_cookie = request.cookies.get(oauth.NONCE_COOKIE_NAME)
     if not oauth.verify_cookies(state_cookie, nonce_cookie, state, nonce):
         return HTMLResponse(_callback_html_error("google", "failed cookie/state binding"), status_code=400)
+    code_verifier_signed = request.cookies.get(oauth.CODE_VERIFIER_COOKIE_NAME)
+    code_verifier = oauth.extract_signed_code_verifier(code_verifier_signed)
     try:
-        token_payload = await oauth.google_exchange_code(code)
+        token_payload = await oauth.google_exchange_code(code, code_verifier)
         access_token = token_payload.get("access_token")
         if not access_token:
             raise RuntimeError("no access_token from Google")
