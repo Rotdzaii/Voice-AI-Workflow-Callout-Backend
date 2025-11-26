@@ -138,7 +138,10 @@ async def oauth_google_callback(request: Request, code: str | None = None, state
             async with pool.acquire() as conn:
                 uid, role = await oauth.get_or_create_account_by_email(conn, email)
             app_token = auth.create_access_token({"sub": uid, "role": role or "user"})
-        return HTMLResponse(_callback_html_success("google", app_token))
+        # Optional: ensure web_nonce (from frontend) matches provider nonce
+        if web_nonce and nonce and web_nonce != nonce:
+            return HTMLResponse(_callback_html_error("google", "web_nonce mismatch"), status_code=400)
+        return HTMLResponse(_callback_html_success("google", app_token, web_nonce))
     except Exception as e:
         return HTMLResponse(_callback_html_error("google", str(e)), status_code=500)
 
@@ -157,7 +160,7 @@ async def oauth_github_start():
 
 
 @app.get("/auth/oauth/github/callback")
-async def oauth_github_callback(request: Request, code: str | None = None, state: str | None = None):
+async def oauth_github_callback(request: Request, code: str | None = None, state: str | None = None, web_nonce: str | None = None):
     if not code or not oauth.verify_state(state, "github"):
         return HTMLResponse(_callback_html_error("github", "missing code/state"), status_code=400)
     # Verify cookie binding
@@ -180,7 +183,7 @@ async def oauth_github_callback(request: Request, code: str | None = None, state
             async with pool.acquire() as conn:
                 uid, role = await oauth.get_or_create_account_by_email(conn, email)
             app_token = auth.create_access_token({"sub": uid, "role": role or "user"})
-        return HTMLResponse(_callback_html_success("github", app_token))
+        return HTMLResponse(_callback_html_success("github", app_token, web_nonce))
     except Exception as e:
         return HTMLResponse(_callback_html_error("github", str(e)), status_code=500)
 
@@ -345,7 +348,7 @@ async def list_intents():
 
 # --------------- Helper HTML for popup callback ---------------
 
-def _callback_html_success(provider: str, token: str) -> str:
+def _callback_html_success(provider: str, token: str, web_nonce: str | None = None) -> str:
         from string import Template
         tmpl = Template("""<!doctype html>
 <html><head><meta charset='utf-8'><title>Login Success</title></head>
@@ -353,14 +356,14 @@ def _callback_html_success(provider: str, token: str) -> str:
 <script>
     try {
         if (window.opener) {
-            window.opener.postMessage({"type":"oauth","provider":"$provider","ok":true,"token":"$token"}, "*");
+            window.opener.postMessage({"type":"oauth","provider":"$provider","ok":true,"token":"$token","web_nonce":"$web_nonce"}, "*");
         }
     } catch (e) {}
     window.close();
     document.body.innerText = 'You can close this window.';
 </script>
 </body></html>""")
-        return tmpl.substitute(provider=provider, token=token)
+        return tmpl.substitute(provider=provider, token=token, web_nonce=web_nonce or "")
 
 
 def _callback_html_error(provider: str, message: str) -> str:
