@@ -167,7 +167,13 @@ async def google_userinfo(access_token: str) -> Dict[str, Any]:
             headers={"Authorization": f"Bearer {access_token}"},
         )
         resp.raise_for_status()
-        return resp.json()
+        data = resp.json()
+        return {
+            "id": data.get("sub"),
+            "email": data.get("email"),
+            "name": data.get("name"),
+            "picture": data.get("picture"),
+        }
 
 
 # -------------------- GitHub OAuth --------------------
@@ -228,7 +234,13 @@ async def github_userinfo(access_token: str) -> Dict[str, Any]:
             emails = emails_resp.json() or []
             primary = next((e for e in emails if e.get("primary") and e.get("verified")), None)
             email = (primary or (emails[0] if emails else {})).get("email")
-        return {"id": user.get("id"), "login": user.get("login"), "name": user.get("name"), "email": email}
+        return {
+            "id": user.get("id"),
+            "login": user.get("login"),
+            "name": user.get("name"),
+            "email": email,
+            "avatar_url": user.get("avatar_url"),
+        }
 
 
 # -------------------- Account helper --------------------

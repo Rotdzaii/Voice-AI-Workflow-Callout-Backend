@@ -47,3 +47,7 @@ STATE_COOKIE_NAME = "oauth_state"
 NONCE_COOKIE_NAME = "oauth_nonce"
 COOKIE_MAX_AGE_SECONDS = int(env_int("OAUTH_COOKIE_MAX_AGE", 600) or 600)
 CODE_VERIFIER_COOKIE_NAME = "oauth_code_verifier"
+JWT_ISSUER = env_str("JWT_ISSUER", "voiceai-backend")
+JWT_AUDIENCE = env_str("JWT_AUDIENCE", "voiceai-frontend")
+ACCESS_TOKEN_TTL_SECONDS = env_int("ACCESS_TOKEN_TTL_SECONDS", 3600)  # 1h default
+JWT_KEY_ID = env_str("JWT_KEY_ID", "primary")

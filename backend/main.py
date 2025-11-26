@@ -135,12 +135,26 @@ async def oauth_google_callback(request: Request, code: str | None = None, state
         if not email:
             raise RuntimeError("no email from Google userinfo")
         if DEV_AUTH_ALLOW_NO_DB:
-            app_token = auth.create_access_token({"sub": email, "email": email, "role": "user"})
+            app_token = auth.create_access_token({
+                "sub": email,
+                "email": email,
+                "role": "user",
+                "provider": "google",
+                "name": profile.get("name"),
+                "picture": profile.get("picture"),
+            })
         else:
             pool = await db.get_pool()
             async with pool.acquire() as conn:
                 uid, role = await oauth.get_or_create_account_by_email(conn, email)
-            app_token = auth.create_access_token({"sub": uid, "role": role or "user"})
+            app_token = auth.create_access_token({
+                "sub": uid,
+                "email": email,
+                "role": role or "user",
+                "provider": "google",
+                "name": profile.get("name"),
+                "picture": profile.get("picture"),
+            })
         # Optional: ensure web_nonce (from frontend) matches provider nonce
         if web_nonce and nonce and web_nonce != nonce:
             return HTMLResponse(_callback_html_error("google", "web_nonce mismatch"), status_code=400)
@@ -180,12 +194,26 @@ async def oauth_github_callback(request: Request, code: str | None = None, state
         if not email:
             raise RuntimeError("no email from GitHub userinfo")
         if DEV_AUTH_ALLOW_NO_DB:
-            app_token = auth.create_access_token({"sub": email, "email": email, "role": "user"})
+            app_token = auth.create_access_token({
+                "sub": email,
+                "email": email,
+                "role": "user",
+                "provider": "github",
+                "name": profile.get("name") or profile.get("login"),
+                "picture": profile.get("avatar_url"),
+            })
         else:
             pool = await db.get_pool()
             async with pool.acquire() as conn:
                 uid, role = await oauth.get_or_create_account_by_email(conn, email)
-            app_token = auth.create_access_token({"sub": uid, "role": role or "user"})
+            app_token = auth.create_access_token({
+                "sub": uid,
+                "email": email,
+                "role": role or "user",
+                "provider": "github",
+                "name": profile.get("name") or profile.get("login"),
+                "picture": profile.get("avatar_url"),
+            })
         return HTMLResponse(_callback_html_success("github", app_token, web_nonce))
     except Exception as e:
         return HTMLResponse(_callback_html_error("github", str(e)), status_code=500)
