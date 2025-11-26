@@ -37,3 +37,6 @@ USE_SUPABASE_SDK = env_str("SUPABASE_USE_SDK", "false").lower() in {"1", "true",
 # NLU & Conversation
 NLU_ENGINE = env_str("NLU_ENGINE", "simple")  # simple | phobert
 DEEPPAVLOV_URL = env_str("DEEPPAVLOV_URL")
+
+# Dev helpers
+DEV_AUTH_ALLOW_NO_DB = env_str("DEV_AUTH_ALLOW_NO_DB", "false").lower() in {"1", "true", "yes"}

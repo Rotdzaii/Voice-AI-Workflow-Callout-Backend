@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, HTTPException, status, WebSocket, WebSocketDisconnect, Body
+from fastapi import FastAPI, Depends, HTTPException, status, WebSocket, WebSocketDisconnect, Body, Request
 from contextlib import asynccontextmanager
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from . import auth, db, models
@@ -11,8 +11,11 @@ from .conversation import process_turn
 from .asterisk import originate
 from .models import NLUParseIn, NLUParseOut, ConversationIn, ConversationOut, CallStartIn, CallReplyIn, ConversationAgentIn
 from fastapi.middleware.cors import CORSMiddleware
-from .config import env_str
+from .config import env_str, DEV_AUTH_ALLOW_NO_DB
 from .deeppavlov_client import get_agent
+from starlette.responses import RedirectResponse, HTMLResponse, JSONResponse
+from urllib.parse import urlencode
+from . import oauth
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -84,12 +87,88 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
     if not payload:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
     user_id = payload.get("sub")
+    # Dev fallback: accept token-only identity (no DB) when enabled
+    if DEV_AUTH_ALLOW_NO_DB and (payload.get("email") or (user_id and "@" in str(user_id))):
+        email = payload.get("email") or str(user_id)
+        return {"id": str(user_id or email), "email": email, "role": payload.get("role", "user")}
     pool = await db.get_pool()
     async with pool.acquire() as conn:
         row = await conn.fetchrow("SELECT id, email, role FROM accounts WHERE id=$1", user_id)
         if not row:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
         return {"id": str(row["id"]), "email": row["email"], "role": row["role"]}
+
+
+# -------------------- OAuth: Google --------------------
+
+@app.get("/auth/oauth/google/start")
+async def oauth_google_start():
+    try:
+        url = oauth.google_auth_url()
+        return RedirectResponse(url)
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=503)
+
+
+@app.get("/auth/oauth/google/callback")
+async def oauth_google_callback(request: Request, code: str | None = None, state: str | None = None):
+    if not code or not oauth.verify_state(state, "google"):
+        return HTMLResponse(_callback_html_error("google", "missing code/state"), status_code=400)
+    try:
+        token_payload = await oauth.google_exchange_code(code)
+        access_token = token_payload.get("access_token")
+        if not access_token:
+            raise RuntimeError("no access_token from Google")
+        profile = await oauth.google_userinfo(access_token)
+        email = profile.get("email")
+        if not email:
+            raise RuntimeError("no email from Google userinfo")
+        if DEV_AUTH_ALLOW_NO_DB:
+            app_token = auth.create_access_token({"sub": email, "email": email, "role": "user"})
+        else:
+            pool = await db.get_pool()
+            async with pool.acquire() as conn:
+                uid, role = await oauth.get_or_create_account_by_email(conn, email)
+            app_token = auth.create_access_token({"sub": uid, "role": role or "user"})
+        return HTMLResponse(_callback_html_success("google", app_token))
+    except Exception as e:
+        return HTMLResponse(_callback_html_error("google", str(e)), status_code=500)
+
+
+# -------------------- OAuth: GitHub --------------------
+
+@app.get("/auth/oauth/github/start")
+async def oauth_github_start():
+    try:
+        url = oauth.github_auth_url()
+        return RedirectResponse(url)
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=503)
+
+
+@app.get("/auth/oauth/github/callback")
+async def oauth_github_callback(request: Request, code: str | None = None, state: str | None = None):
+    if not code or not oauth.verify_state(state, "github"):
+        return HTMLResponse(_callback_html_error("github", "missing code/state"), status_code=400)
+    try:
+        token_payload = await oauth.github_exchange_code(code)
+        access_token = token_payload.get("access_token")
+        if not access_token:
+            raise RuntimeError("no access_token from GitHub")
+        profile = await oauth.github_userinfo(access_token)
+        email = profile.get("email")
+        if not email:
+            raise RuntimeError("no email from GitHub userinfo")
+        if DEV_AUTH_ALLOW_NO_DB:
+            app_token = auth.create_access_token({"sub": email, "email": email, "role": "user"})
+        else:
+            pool = await db.get_pool()
+            async with pool.acquire() as conn:
+                uid, role = await oauth.get_or_create_account_by_email(conn, email)
+            app_token = auth.create_access_token({"sub": uid, "role": role or "user"})
+        return HTMLResponse(_callback_html_success("github", app_token))
+    except Exception as e:
+        return HTMLResponse(_callback_html_error("github", str(e)), status_code=500)
 
 
 @app.post("/auth/register", response_model=models.UserOut)
@@ -248,6 +327,45 @@ async def list_intents():
         }
         for r in rows
     ]
+
+
+# --------------- Helper HTML for popup callback ---------------
+
+def _callback_html_success(provider: str, token: str) -> str:
+        from string import Template
+        tmpl = Template("""<!doctype html>
+<html><head><meta charset='utf-8'><title>Login Success</title></head>
+<body>
+<script>
+    try {
+        if (window.opener) {
+            window.opener.postMessage({"type":"oauth","provider":"$provider","ok":true,"token":"$token"}, "*");
+        }
+    } catch (e) {}
+    window.close();
+    document.body.innerText = 'You can close this window.';
+</script>
+</body></html>""")
+        return tmpl.substitute(provider=provider, token=token)
+
+
+def _callback_html_error(provider: str, message: str) -> str:
+        from string import Template
+        from html import escape
+        msg = escape(message or "unknown error")
+        tmpl = Template("""<!doctype html>
+<html><head><meta charset='utf-8'><title>Login Error</title></head>
+<body>
+<script>
+    try {
+        if (window.opener) {
+            window.opener.postMessage({"type":"oauth","provider":"$provider","ok":false,"error":"$msg"}, "*");
+        }
+    } catch (e) {}
+    document.body.innerText = 'OAuth failed: $msg';
+</script>
+</body></html>""")
+        return tmpl.substitute(provider=provider, msg=msg)
 
 
 @app.get("/entities")
