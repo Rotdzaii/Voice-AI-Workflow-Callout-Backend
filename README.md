@@ -1,6 +1,6 @@
 VoiceAI — Hướng dẫn tổng hợp (Tiếng Việt)
 
-Mục tiêu: Tài liệu này giúp bạn nắm nhanh toàn cảnh dự án, cách chạy backend, cấu hình cơ sở dữ liệu/Supabase, chạy test, triển khai và liệt kê các endpoint chính.
+Mục tiêu: Tài liệu này giúp nắm nhanh toàn cảnh dự án, cách chạy backend, cấu hình cơ sở dữ liệu/Supabase, chạy test, triển khai và liệt kê các endpoint chính.
 
 1) Những việc đã thực hiện
 - Quét, kiểm tra và tối ưu mã nguồn backend (FastAPI, Python 3.11).
