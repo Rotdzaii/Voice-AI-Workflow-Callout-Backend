@@ -104,16 +104,24 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
 @app.get("/auth/oauth/google/start")
 async def oauth_google_start():
     try:
-        url = oauth.google_auth_url()
-        return RedirectResponse(url)
+        url, state, nonce = oauth.google_auth_url()
+        resp = RedirectResponse(url)
+        oauth.set_state_cookie(resp, state)
+        oauth.set_nonce_cookie(resp, nonce)
+        return resp
     except Exception as e:
         return JSONResponse({"error": str(e)}, status_code=503)
 
 
 @app.get("/auth/oauth/google/callback")
-async def oauth_google_callback(request: Request, code: str | None = None, state: str | None = None):
+async def oauth_google_callback(request: Request, code: str | None = None, state: str | None = None, nonce: str | None = None, web_nonce: str | None = None):
     if not code or not oauth.verify_state(state, "google"):
         return HTMLResponse(_callback_html_error("google", "missing code/state"), status_code=400)
+    # Verify cookies binding
+    state_cookie = request.cookies.get(oauth.STATE_COOKIE_NAME)
+    nonce_cookie = request.cookies.get(oauth.NONCE_COOKIE_NAME)
+    if not oauth.verify_cookies(state_cookie, nonce_cookie, state, nonce):
+        return HTMLResponse(_callback_html_error("google", "failed cookie/state binding"), status_code=400)
     try:
         token_payload = await oauth.google_exchange_code(code)
         access_token = token_payload.get("access_token")
@@ -140,8 +148,10 @@ async def oauth_google_callback(request: Request, code: str | None = None, state
 @app.get("/auth/oauth/github/start")
 async def oauth_github_start():
     try:
-        url = oauth.github_auth_url()
-        return RedirectResponse(url)
+        url, state = oauth.github_auth_url()
+        resp = RedirectResponse(url)
+        oauth.set_state_cookie(resp, state)
+        return resp
     except Exception as e:
         return JSONResponse({"error": str(e)}, status_code=503)
 
@@ -150,6 +160,10 @@ async def oauth_github_start():
 async def oauth_github_callback(request: Request, code: str | None = None, state: str | None = None):
     if not code or not oauth.verify_state(state, "github"):
         return HTMLResponse(_callback_html_error("github", "missing code/state"), status_code=400)
+    # Verify cookie binding
+    state_cookie = request.cookies.get(oauth.STATE_COOKIE_NAME)
+    if not oauth.verify_cookies(state_cookie, None, state, None):
+        return HTMLResponse(_callback_html_error("github", "failed cookie/state binding"), status_code=400)
     try:
         token_payload = await oauth.github_exchange_code(code)
         access_token = token_payload.get("access_token")

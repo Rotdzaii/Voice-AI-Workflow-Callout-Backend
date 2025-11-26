@@ -1,16 +1,34 @@
 from __future__ import annotations
 import secrets
+import hmac
+import hashlib
 from typing import Optional, Tuple, Dict, Any
 
 import httpx
 from jose import jwt, JWTError
 
-from .config import env_str
+from .config import env_str, SECRET_KEY, STATE_COOKIE_NAME, NONCE_COOKIE_NAME, COOKIE_MAX_AGE_SECONDS
 from . import auth
 
 
 ALGORITHM = "HS256"
 SECRET_FOR_STATE = env_str("SUPABASE_JWT_SECRET") or env_str("JWT_SECRET") or "change-me-in-prod"
+
+
+def _sign(value: str) -> str:
+    sig = hmac.new(SECRET_KEY.encode("utf-8"), msg=value.encode("utf-8"), digestmod=hashlib.sha256).hexdigest()
+    return f"{value}|{sig}"
+
+
+def _verify_signed(cookie_value: Optional[str], expected: Optional[str]) -> bool:
+    if not cookie_value or not expected:
+        return False
+    try:
+        val, sig = cookie_value.split("|", 1)
+    except ValueError:
+        return False
+    calc = hmac.new(SECRET_KEY.encode("utf-8"), msg=val.encode("utf-8"), digestmod=hashlib.sha256).hexdigest()
+    return hmac.compare_digest(sig, calc) and hmac.compare_digest(val, expected)
 
 
 def build_state(provider: str) -> str:
@@ -28,15 +46,44 @@ def verify_state(state: Optional[str], expected_provider: str) -> bool:
         return False
 
 
+def set_state_cookie(response, state: str):
+    response.set_cookie(
+        STATE_COOKIE_NAME,
+        _sign(state),
+        max_age=COOKIE_MAX_AGE_SECONDS,
+        httponly=True,
+        samesite="lax",
+        secure=False,  # set True on HTTPS
+    )
+
+
+def set_nonce_cookie(response, nonce: str):
+    response.set_cookie(
+        NONCE_COOKIE_NAME,
+        _sign(nonce),
+        max_age=COOKIE_MAX_AGE_SECONDS,
+        httponly=True,
+        samesite="lax",
+        secure=False,  # set True on HTTPS
+    )
+
+
+def verify_cookies(state_cookie: Optional[str], nonce_cookie: Optional[str], state: Optional[str], nonce: Optional[str]) -> bool:
+    ok_state = _verify_signed(state_cookie, state) if (state_cookie and state) else True
+    ok_nonce = _verify_signed(nonce_cookie, nonce) if (nonce_cookie and nonce) else True
+    return ok_state and ok_nonce
+
+
 # -------------------- Google OAuth --------------------
 
-def google_auth_url() -> str:
+def google_auth_url() -> Tuple[str, str, str]:
     client_id = env_str("GOOGLE_CLIENT_ID")
     redirect_uri = env_str("GOOGLE_REDIRECT_URI")
     if not client_id or not redirect_uri:
         raise RuntimeError("Missing GOOGLE_CLIENT_ID/GOOGLE_REDIRECT_URI")
     scope = "openid email profile"
     state = build_state("google")
+    nonce = secrets.token_urlsafe(12)
     from urllib.parse import urlencode
     params = urlencode({
         "client_id": client_id,
@@ -46,8 +93,9 @@ def google_auth_url() -> str:
         "access_type": "online",
         "prompt": "consent",
         "state": state,
+        "nonce": nonce,
     })
-    return f"https://accounts.google.com/o/oauth2/v2/auth?{params}"
+    return f"https://accounts.google.com/o/oauth2/v2/auth?{params}", state, nonce
 
 
 async def google_exchange_code(code: str) -> Dict[str, Any]:
@@ -84,7 +132,7 @@ async def google_userinfo(access_token: str) -> Dict[str, Any]:
 
 # -------------------- GitHub OAuth --------------------
 
-def github_auth_url() -> str:
+def github_auth_url() -> Tuple[str, str]:
     client_id = env_str("GITHUB_CLIENT_ID")
     redirect_uri = env_str("GITHUB_REDIRECT_URI")
     if not client_id or not redirect_uri:
@@ -98,7 +146,7 @@ def github_auth_url() -> str:
         "state": state,
         "allow_signup": "true",
     })
-    return f"https://github.com/login/oauth/authorize?{params}"
+    return f"https://github.com/login/oauth/authorize?{params}", state
 
 
 async def github_exchange_code(code: str) -> Dict[str, Any]:
