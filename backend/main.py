@@ -11,11 +11,12 @@ from .conversation import process_turn
 from .asterisk import originate
 from .models import NLUParseIn, NLUParseOut, ConversationIn, ConversationOut, CallStartIn, CallReplyIn, ConversationAgentIn
 from fastapi.middleware.cors import CORSMiddleware
-from .config import env_str, DEV_AUTH_ALLOW_NO_DB
 from .deeppavlov_client import get_agent
 from starlette.responses import RedirectResponse, HTMLResponse, JSONResponse
 from urllib.parse import urlencode
 from . import oauth
+import socket
+from .config import DATABASE_URL as CFG_DATABASE_URL
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -35,12 +36,15 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="VoiceAI - Backend (MVP)", lifespan=lifespan)
 
-# Enable CORS for frontend integration
-allowed_origins = env_str("ALLOWED_ORIGINS", "*")
-origins = [o.strip() for o in allowed_origins.split(",") if o.strip()]
+# Enable CORS for frontend integration (local dev + permissive fallback)
+allowed_origins = [
+    "http://localhost:5173",  # primary Vite dev server
+    "http://localhost:3000",  # fallback dev host
+]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=allowed_origins,
+    allow_origin_regex=".*",  # allow all origins when deployed (e.g., Render)
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -62,6 +66,50 @@ async def db_ping():
         return {"ok": True, "result": val}
     except Exception as e:
         # Avoid leaking internals; return minimal info
+        return {"ok": False, "error": str(e)}
+
+
+@app.get("/debug/env")
+async def debug_env():
+    """Return key environment values for debugging (non-secret)."""
+    try:
+        return {
+            "database_url_present": bool(CFG_DATABASE_URL),
+            "database_url": CFG_DATABASE_URL,
+        }
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@app.get("/debug/resolve")
+async def debug_resolve():
+    """Try DNS resolution for the host in DATABASE_URL to diagnose getaddrinfo errors."""
+    try:
+        if not CFG_DATABASE_URL:
+            return {"ok": False, "error": "DATABASE_URL not set"}
+        host = None
+        try:
+            from urllib.parse import urlparse
+            parsed = urlparse(CFG_DATABASE_URL)
+            host = parsed.hostname
+            port = parsed.port or 5432
+        except Exception:
+            # Fallback: naive split
+            host = CFG_DATABASE_URL.split("@")[1].split(":")[0]
+            port = 5432
+        infos = socket.getaddrinfo(host, port)
+        addrs = [
+            {
+                "family": str(info[0]),
+                "type": str(info[1]),
+                "proto": str(info[2]),
+                "canonname": info[3],
+                "sockaddr": info[4],
+            }
+            for info in infos
+        ]
+        return {"ok": True, "host": host, "port": port, "results": addrs}
+    except Exception as e:
         return {"ok": False, "error": str(e)}
 
 
@@ -87,10 +135,6 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
     if not payload:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
     user_id = payload.get("sub")
-    # Dev fallback: accept token-only identity (no DB) when enabled
-    if DEV_AUTH_ALLOW_NO_DB and (payload.get("email") or (user_id and "@" in str(user_id))):
-        email = payload.get("email") or str(user_id)
-        return {"id": str(user_id or email), "email": email, "role": payload.get("role", "user")}
     pool = await db.get_pool()
     async with pool.acquire() as conn:
         row = await conn.fetchrow("SELECT id, email, role FROM accounts WHERE id=$1", user_id)
@@ -134,27 +178,17 @@ async def oauth_google_callback(request: Request, code: str | None = None, state
         email = profile.get("email")
         if not email:
             raise RuntimeError("no email from Google userinfo")
-        if DEV_AUTH_ALLOW_NO_DB:
-            app_token = auth.create_access_token({
-                "sub": email,
-                "email": email,
-                "role": "user",
-                "provider": "google",
-                "name": profile.get("name"),
-                "picture": profile.get("picture"),
-            })
-        else:
-            pool = await db.get_pool()
-            async with pool.acquire() as conn:
-                uid, role = await oauth.get_or_create_account_by_email(conn, email)
-            app_token = auth.create_access_token({
-                "sub": uid,
-                "email": email,
-                "role": role or "user",
-                "provider": "google",
-                "name": profile.get("name"),
-                "picture": profile.get("picture"),
-            })
+        pool = await db.get_pool()
+        async with pool.acquire() as conn:
+            uid, role = await oauth.get_or_create_account_by_email(conn, email)
+        app_token = auth.create_access_token({
+            "sub": uid,
+            "email": email,
+            "role": role or "user",
+            "provider": "google",
+            "name": profile.get("name"),
+            "picture": profile.get("picture"),
+        })
         # Optional: ensure web_nonce (from frontend) matches provider nonce
         if web_nonce and nonce and web_nonce != nonce:
             return HTMLResponse(_callback_html_error("google", "web_nonce mismatch"), status_code=400)
@@ -193,27 +227,17 @@ async def oauth_github_callback(request: Request, code: str | None = None, state
         email = profile.get("email")
         if not email:
             raise RuntimeError("no email from GitHub userinfo")
-        if DEV_AUTH_ALLOW_NO_DB:
-            app_token = auth.create_access_token({
-                "sub": email,
-                "email": email,
-                "role": "user",
-                "provider": "github",
-                "name": profile.get("name") or profile.get("login"),
-                "picture": profile.get("avatar_url"),
-            })
-        else:
-            pool = await db.get_pool()
-            async with pool.acquire() as conn:
-                uid, role = await oauth.get_or_create_account_by_email(conn, email)
-            app_token = auth.create_access_token({
-                "sub": uid,
-                "email": email,
-                "role": role or "user",
-                "provider": "github",
-                "name": profile.get("name") or profile.get("login"),
-                "picture": profile.get("avatar_url"),
-            })
+        pool = await db.get_pool()
+        async with pool.acquire() as conn:
+            uid, role = await oauth.get_or_create_account_by_email(conn, email)
+        app_token = auth.create_access_token({
+            "sub": uid,
+            "email": email,
+            "role": role or "user",
+            "provider": "github",
+            "name": profile.get("name") or profile.get("login"),
+            "picture": profile.get("avatar_url"),
+        })
         return HTMLResponse(_callback_html_success("github", app_token, web_nonce))
     except Exception as e:
         return HTMLResponse(_callback_html_error("github", str(e)), status_code=500)
