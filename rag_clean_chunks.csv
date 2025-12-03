@@ -1,0 +1,481 @@
+id,group,topic,contents
+1,Company,Giới thiệu,MITEK J.S.C là Công ty Cổ phần Công nghệ Dịch vụ chuyên cung cấp các giải pháp công nghệ tiên tiến trong lĩnh vực CNTT và Viễn thông.
+2,Company,Giới thiệu,"Sứ mệnh của MITEK là xây dựng nền tảng số giúp doanh nghiệp nâng cao hiệu quả quản trị trải nghiệm khách hàng, quản lý bán hàng và Marketing tự động hóa."
+3,Technology,Công nghệ,Các sản phẩm của MITEK được triển khai theo mô hình Điện toán đám mây (Cloud) hoặc SaaS (Software as a Service).
+4,Technology,Công nghệ,Hệ thống MITEK tuân thủ các tiêu chuẩn bảo mật cao như chứng chỉ ISO 27001:2013.
+5,Product,Sản phẩm,"MiPBX (Tổng đài Ảo Cloud PBX) là hệ thống tổng đài nội bộ không cần phần cứng, hỗ trợ các tính năng như IVR, ghi âm tự động, và kết nối miễn phí giữa các chi nhánh."
+6,MiPBX,Tính năng MiPBX,"Giải pháp MiPBX có thể được triển khai rất nhanh, chỉ trong vòng 30 phút, và có chi phí vận hành cố định mỗi tháng."
+7,Product,Sản phẩm,"MiCXM (CRM Contact Center) là hệ thống quản lý trải nghiệm khách hàng đa kênh (Voice, Email, Chat, Facebook) và tối ưu hóa năng suất Telesales/Outbound."
+8,MiCXM,Tính năng MiCXM,MiCXM sở hữu các tính năng nâng cao như PDS (Predictive Dialer System) và định tuyến cuộc gọi dựa trên kỹ năng (skill-based routing).
+9,MiCXM,Lợi ích MiCXM,Việc sử dụng MiCXM có thể giúp giảm chi phí hoạt động Contact Center lên đến 70% nhờ xây dựng trên nền tảng Cloud và mã nguồn mở.
+10,Product,Sản phẩm,MiDesk (OmniChannel Support) là phần mềm quản lý hỗ trợ khách hàng đa kênh thông qua hệ thống Ticket System tập trung.
+11,MiDesk,Tính năng MiDesk,"MiDesk giúp chuyển đổi mọi tương tác (Call, Chat, Email, Social) thành phiếu xử lý (Ticket), thực hiện phân bổ tự động, và cung cấp báo cáo KPI/SLA chi tiết."
+12,Product,Sản phẩm,MiSMS cung cấp dịch vụ gửi tin nhắn hàng loạt bằng SMS Brandname và Zalo Notification Service (ZNS) để quảng cáo và chăm sóc khách hàng.
+13,Integration,Tích hợp,"Các sản phẩm MITEK dễ dàng tích hợp với các hệ thống CRM, ERP, và Ticketing bên thứ ba thông qua API, bao gồm Salesforce CRM, Zoho CRM, và Zendesk."
+14,Case Study,Case Study,"Khách hàng J&T Express sử dụng MiCXM để quản lý, phân tầng nhân viên (Admin, Senior, QC) và tích hợp Kho kiến thức (Knowledge Base) để Agent tra cứu thông tin nhanh."
+15,Case Study,Case Study,Bệnh viện Nguyễn Tri Phương và Khu căn hộ HAGL 3 chọn MiPBX vì hệ thống hoạt động ổn định và được hỗ trợ kỹ thuật nhanh chóng từ MITEK và nhà mạng.
+16,MiPBX,MiPBX: Auto Call,"Auto Call MiPBX là dịch vụ gọi tự động thông minh, thực hiện hàng trăm, hàng nghìn cuộc gọi với nội dung dựng sẵn từ file Audio hoặc nội dung cá nhân hóa bằng công nghệ AI Text2Speech."
+17,Benefits,Lợi ích Auto Call,"Giải pháp Auto Call MiPBX giúp cắt giảm 100% Chi phí đầu tư hạ tầng, tiết kiệm 95% nguồn lực tổng đài viên, và gia tăng 75% hiệu quả tiếp cận khách hàng."
+18,Other,Ứng dụng Auto Call,"Auto Call có thể được sử dụng trong nghiệp vụ Tài chính (gọi nhắc nhở lịch thu hồi nợ, gia hạn dịch vụ), gọi thông báo tình trạng vận đơn, hoặc gọi thông báo lịch hẹn/tái khám."
+19,Other,Tính năng Auto Call,"Auto Call MiPBX hỗ trợ quản lý đồng thời nhiều chiến dịch, cho phép tương tác cuộc gọi 2 chiều qua phím ấn, và quản lý nguồn import từ file Excel hoặc qua API."
+20,MiPBX,MiPBX: Missed Call,"Để chủ động phòng chống Missed Call (cuộc gọi nhỡ) không để mất khách, MiPBX sử dụng tính năng Missed Call to Email."
+21,Benefits,Lợi ích Missed Call,"Khi có cuộc gọi nhỡ, hệ thống sẽ gửi email chứa thông tin chi tiết (thời gian, số điện thoại khách hàng, đầu số bị nhỡ) để nhân viên liên hệ lại kịp thời và phân tích xu hướng."
+22,MiPBX,MiPBX: IVR,IVR (Interactive Voice Response) là hệ thống phản hồi tích hợp giọng nói (lời chào) và là xương sống của quy trình định tuyến cuộc gọi trong Call Center.
+23,Benefits,Lợi ích IVR,"IVR giúp tiết kiệm thời gian và chi phí bằng cách tự phân loại thông tin qua tùy chọn phím bấm, giúp người gọi kết nối nhanh chóng và chính xác tới tổng đài viên phù hợp."
+24,Other,Tính năng IVR,"Hệ thống IVR hỗ trợ định tuyến cuộc gọi dựa trên menu thời gian (Time Condition), chuyển đổi Text-to-Speech với nhiều ngôn ngữ, và tạo cây IVR phức tạp qua giao diện đồ họa."
+25,Integration,Tích hợp CRM,Tổng đài Call Center MiPBX có thể tích hợp với các hệ thống CRM như Zoho CRM hoặc Bitrix24 để hiển thị giao diện Pop-up chứa thông tin khách hàng ngay khi có cuộc gọi đến.
+26,Integration,Tích hợp CRM,"Việc tích hợp MiPBX với CRM giúp nhân viên có quyền truy cập thông tin thời gian thực, phá vỡ kho chứa dữ liệu, từ đó tăng cường hiệu suất làm việc và chốt giao dịch tốt hơn."
+27,MiDesk,MiDesk: Ticketing,"Hệ thống Ticket system của MiDesk giúp tiếp nhận kịp thời, gán trách nhiệm đầy đủ, theo dõi và quản lý chặt chẽ số lượng yêu cầu (ticket) ngày càng tăng của khách hàng."
+28,MiDesk,MiDesk: Ticketing,Ticket system của MiDesk là một quy trình hoàn chỉnh: Tiếp nhận – Phân phối – Xử lý – Theo dõi – Quản lý các yêu cầu của khách hàng từ nhiều kênh về một nơi duy nhất.
+29,MiDesk,MiDesk: Ticketing,"MiDesk hỗ trợ tạo ticket nhanh chóng từ các yêu cầu thông tin tiếp nhận qua nhiều kênh, giúp nhân viên tạo vé dễ dàng và hiệu quả hơn."
+30,MiDesk,MiDesk: Ticketing,"Các chức năng như gắn thẻ (tag), cụm nhóm (grouping), và phân loại giúp người dùng quản lý vé một cách khoa học hơn, từ đó điều chỉnh chất lượng sản phẩm và dịch vụ."
+31,MiDesk,MiDesk: SLA,"MiDesk cho phép thiết lập SLA (Service Level Agreement) cho từng ticket để đo lường và quản lý thời gian phản hồi/xử lý, giúp gia tăng sự hài lòng của khách hàng."
+32,MiDesk,MiDesk: Cộng tác,"Tính năng cộng tác cho phép phối hợp nhanh chóng và nhất quán giữa các bộ phận, phòng ban để giải quyết một vụ việc phức tạp không thể giải quyết trong lúc trò chuyện."
+33,MiDesk,MiDesk: Tự động,MiDesk cung cấp tính năng tự động phân bổ chỉ định phiếu theo cơ chế chia tải xoay vòng (Auto-rotation) tới nhân viên xử lý.
+34,MiDesk,MiDesk: Tự động,Hệ thống MiDesk có thể tự động nhắc nhở khi phiếu đến hạn hoặc quá hạn xử lý.
+35,MiDesk,MiDesk: Workflow,"MiDesk hỗ trợ Automation & Workflow để tự động hóa năng suất vận hành, bao gồm cả việc thông báo tự động khi phiếu thay đổi trạng thái qua email."
+36,MiDesk,MiDesk: Báo cáo,"Hệ thống báo cáo có sẵn trên MiDesk cung cấp đa dạng các mẫu báo cáo liên quan đến Ticket như: Ticket theo phòng ban, Ticket theo nguồn, và trạng thái xử lý Ticket."
+37,MiDesk,MiDesk: Đa kênh,"MiDesk hợp nhất tất cả các kênh Facebook, Zalo OA, Email, Live chat, Hotline 24/7 về cùng một cửa sổ OmniChannel duy nhất."
+38,MiDesk,MiDesk: Zalo/FB,"Bất cứ khi nào doanh nghiệp nhận được bình luận (comment) hay tin nhắn (inbox) trên Fanpage Facebook, hoặc tương tác qua Zalo OA, hệ thống MiDesk ngay lập tức tạo thành một Ticket."
+39,MiDesk,MiDesk: Email,MiDesk cho phép nhân viên truy cập và quản lý tất cả các email hỗ trợ khách hàng ngay trong thanh công cụ MiDesk mà không cần kiểm tra từng hộp thư riêng lẻ.
+40,MiDesk,MiDesk: WebCallback,"Webcallback là một kênh cho phép khách hàng điền số điện thoại trên website và yêu cầu gọi lại, hệ thống MiDesk sẽ tự động kết nối nhân viên và khách hàng."
+41,MiDesk,MiDesk: CRM,"MiDesk hỗ trợ tạo chân dung khách hàng 360° bằng cách nhận diện khách hàng qua số điện thoại, Facebook, Zalo, Email và lưu lại toàn bộ lịch sử tương tác."
+42,MiDesk,MiDesk: CRM,"Mọi thông tin khách hàng được lưu trữ trực tiếp trên phần mềm MiDesk, khi có tương tác, thông tin sẽ hiện lên màn hình làm việc thông qua Popup."
+43,MiDesk,MiDesk: CRM,"MiDesk tự động tổng hợp tất cả các Lead (comment, tin nhắn, cuộc gọi,...) từ đa kênh chờ xử lý."
+44,MiDesk,MiDesk: Tiện ích,MiDesk cung cấp tính năng tạo phiếu trả lời theo mẫu (Quick Replies) để cung cấp những mẫu phản hồi nhanh chóng và nhất quán cho các câu hỏi phổ biến của khách hàng.
+45,Other,Lợi thế,Việc triển khai giải pháp Omni-Channel thành công có thể cải thiện tỷ lệ giữ chân khách hàng và tăng doanh số bán hàng lên đến 30% (theo nghiên cứu của McKinsey).
+46,Other,Lợi thế,"MiDesk giúp doanh nghiệp tạo nên sự khác biệt trong cạnh tranh bằng cách mang đến trải nghiệm nhất quán, cá nhân hóa và rút ngắn chu kỳ bán hàng."
+47,Other,Giám sát,Tính năng Realtime Monitoring cho phép Supervisor/Admin giám sát thời gian thực tất cả cuộc gọi đang diễn ra trên hệ thống và các thông tin tổng quát của cuộc gọi.
+48,Other,Giám sát,"MiDesk giúp Doanh nghiệp theo dõi chi tiết Hiệu suất (KPIs) của từng nhân viên/phòng ban, Doanh số & nguồn Leads hiệu quả, và Chất lượng dịch vụ (SLA) qua các báo cáo chi tiết."
+49,MiPBX,MiPBX: Lợi thế,"MiPBX giúp doanh nghiệp không mất số khi di chuyển văn phòng vì hệ thống được triển khai theo mô hình Cloud, khác biệt với tổng đài Analog truyền thống."
+50,MiPBX,MiPBX: Mở rộng,"Tổng đài Cloud MiPBX có thể mở rộng không giới hạn trên toàn quốc, đáp ứng mọi nhu cầu mở rộng từ 1 đến trên 500 máy nhánh."
+51,MiPBX,MiPBX: Công nghệ,"MiPBX được triển khai theo mô hình CaaS (Communication as a Service), cho phép quản lý các cuộc gọi trên Internet thay vì sử dụng hệ thống điện thoại truyền thống."
+52,MiPBX,MiPBX: Lợi ích,"Do chạy trên nền tảng Cloud, MiPBX không tốn chi phí bảo trì, bảo dưỡng tổng đài, và doanh nghiệp không cần người quản trị hệ thống chuyên dụng."
+53,MiPBX,MiPBX: Đầu số,Hệ thống MiPBX cho phép thiết lập nhiều trung kế (SIP Trunk) và kết nối đa dạng các đầu số như Hotline 1900/1800 hoặc số cố định của tất cả các nhà mạng.
+54,MiPBX,MiPBX: Chuyển tiếp,"Tính năng Chuyển tiếp (Forward) cuộc gọi tự động ra di động hoặc cố định được kích hoạt khi khách hàng gọi vào số công ty, đảm bảo không bỏ sót cuộc gọi quan trọng."
+55,MiPBX,MiPBX: Black List,MiPBX hỗ trợ chức năng Black List (Chặn cuộc gọi làm phiền) bằng cách thống kê và đưa các số điện thoại gọi vào làm phiền vào danh sách đen.
+56,MiPBX,MiPBX: Vị trí,"MiPBX có tính linh hoạt cao, cho phép doanh nghiệp sử dụng tổng đài Cloud dù ở bất kỳ nơi đâu, không giới hạn vị trí địa lý."
+57,MiPBX,MiPBX: Bảo mật,"Dữ liệu cuộc gọi và ghi âm được bảo mật chặt chẽ; ghi âm được lưu từ phía Server, nên ngay cả khi User/Extension rớt mạng khi đang nói chuyện, Log và ghi âm vẫn được lưu trữ đến đoạn bị mất kết nối."
+58,MiPBX,MiPBX: Server,"Server của MITEK được đặt tại hai địa điểm chính là IDC VNPT Tân Thuận và IDC Viettel, đảm bảo tính ổn định và back-up dữ liệu cao."
+59,MiPBX,MiPBX: Mở rộng,"Khách hàng có thể dễ dàng gửi yêu cầu mở rộng Extension (máy nhánh) qua email, và MITEK sẽ thực hiện thủ tục nhanh chóng."
+60,MiPBX,MiPBX: Thay đổi,Khách hàng muốn đổi kịch bản IVR hoặc thiết lập Queue có thể gửi yêu cầu vào email hỗ trợ để đội ngũ kỹ thuật MITEK thực hiện.
+61,MiCXM,MiCXM: Nghiệp vụ,"MiCXM là giải pháp Contact Center được thiết kế để phục vụ nhiều nghiệp vụ khác nhau như Outbound Campaign, Debt Collection (thu hồi nợ), Telesales, và Customer Service."
+62,MiCXM,MiCXM: Kênh,"MiCXM hỗ trợ xử lý nhiều kênh thông tin tương tác đồng thời bao gồm thoại, fax, tin nhắn SMS/MMS, email, chat, và WEB."
+63,MiCXM,MiCXM: Năng suất,"Với phương thức quay số định trước từ một nhóm đối tượng khách hàng import, MiCXM đảm bảo năng suất thực hiện các chiến dịch gọi ra (Outbound) là tối ưu."
+64,MiCXM,MiCXM: Agent,"MiCXM – Hệ thống cho phép các agent lưu lại thông tin khách hàng từ bất kỳ đâu và từ bất kỳ kênh truyền thông nào chỉ một lần duy nhất, tối ưu hóa quá trình làm việc."
+65,MiCXM,MiCXM: Mã nguồn,"MiCXM xây dựng trên các thành phần mã nguồn mở và hệ điều hành Linux, giúp loại bỏ sự cần thiết cho phần cứng đắt tiền và license cơ sở dữ liệu chuyên dụng."
+66,MiCXM,MiCXM: Tùy chỉnh,"MiCXM cho phép tùy chỉnh theo nghiệp vụ yêu cầu của khách hàng như Hiệu chỉnh định tuyến cuộc gọi, thông tin Popup khách hàng, và giao diện làm việc của Agent."
+67,MiCXM,MiCXM: Định tuyến,MiCXM giúp gia tăng mức độ hài lòng của khách hàng thông qua định tuyến cuộc gọi dựa trên kỹ năng (Skill-based Routing) của Agent để giải quyết vấn đề nhanh hơn.
+68,MiDesk,MiDesk: Queue,"MiDesk sử dụng cơ chế Penalty trong Queue để thiết lập mức độ ưu tiên: Agent có Penalty = 0 sẽ ưu tiên tiếp nhận cuộc gọi, các nhóm có Penalty cao hơn sẽ là nhóm Backup."
+69,MiDesk,MiDesk: Queue,Cài đặt Nhóm 1 có Penalty = 0 và Nhóm 2 có Penalty = 1; bao giờ Nhóm 1 bận hết thì mới đến lượt Nhóm 2 xử lý.
+70,MiDesk,MiDesk: Omnichannel,"Lợi ích của Omnichannel là kết nối tất cả các kênh lại một hệ thống, mang lại trải nghiệm nhất quán cho khách hàng, khác biệt với Multi-channel thiếu sự thống nhất."
+71,MiDesk,MiDesk: Doanh nghiệp,"MiDesk phù hợp với mọi quy mô doanh nghiệp, không giới hạn ngành nghề, từ các công ty lớn đến các Start-up, chỉ cần cung cấp số lượng người dùng và nhu cầu."
+72,MiDesk,MiDesk: Tích hợp,"Với hệ thống API đầy đủ, MiDesk có thể tích hợp với các hệ thống phần mềm kinh doanh hiện có của doanh nghiệp bạn, giúp hoạt động diễn ra trơn tru."
+73,MiDesk,MiDesk: Agent/Ticket,"Trong hệ thống MiDesk, Agent là nhân viên tiếp nhận trực tiếp nhu cầu của khách hàng qua điện thoại, còn Ticket là yêu cầu phát sinh của khách hàng (câu hỏi, vấn đề, khiếu nại)."
+74,MiDesk,MiDesk: Hợp đồng,Các gói dịch vụ của MiDesk cung cấp theo tháng hoặc theo năm; khách hàng có thể đăng ký/hủy dịch vụ bất kỳ khi nào (nhưng không hoàn trả lại phí đặt cọc).
+75,MiDesk,MiDesk: Thanh toán,MiDesk chấp nhận thanh toán theo hình thức chuyển khoản qua ngân hàng hoặc tiền mặt.
+76,Other,So sánh SP,MiPBX tập trung vào việc cung cấp cơ sở hạ tầng thoại ổn định (Tổng đài nội bộ) và giảm chi phí đầu tư phần cứng.
+77,Other,So sánh SP,"MiCXM tập trung vào Quản lý bán hàng (Telesales) và các chiến dịch Outbound Campaign, sử dụng các công cụ tối ưu hóa hiệu suất Agent và Contact Center."
+78,Other,So sánh SP,MiDesk tập trung vào Quản lý dịch vụ hỗ trợ khách hàng (CSKH) và các yêu cầu tương tác đa kênh (non-voice) thông qua hệ thống Ticket system.
+79,Other,Hệ sinh thái,"Sự kết hợp giữa MiPBX và MiCXM tạo ra một giải pháp Contact Center toàn diện, vừa đảm bảo hạ tầng thoại, vừa tối ưu hóa năng suất bán hàng và chăm sóc khách hàng."
+80,Other,Hệ sinh thái,Việc tích hợp MiDesk với hệ thống tổng đài đảm bảo rằng mọi tương tác qua kênh thoại cũng được chuyển đổi thành ticket và quản lý liền mạch với các kênh chat/email.
+81,Zalo,Tích hợp Zalo,"MITEK hỗ trợ kết nối gọi qua Zalo (ZCC), mở rộng kênh tương tác thoại của doanh nghiệp sang nền tảng Zalo phổ biến tại Việt Nam."
+82,Zalo,Tích hợp Zalo,Việc sử dụng Zalo Notification Service (ZNS) thông qua MiSMS giúp doanh nghiệp gửi thông báo chăm sóc khách hàng cá nhân hóa với độ tin cậy và tỷ lệ mở cao hơn so với SMS thông thường.
+83,Other,Đối tác,"MITEK là đối tác tích hợp của nhiều CRM/Helpdesk nổi tiếng như Zendesk, HubSpot CRM, Freshdesk, Bitrix24, Zoho Desk, và Salesforce CRM."
+84,Other,Đối tác,"MITEK là đối tác của các nhà mạng (Telco) lớn tại Việt Nam như FPT và ITEL, đảm bảo tính ổn định của đường truyền và đầu số Hotline (1900/1800)."
+85,Other,Lĩnh vực,"MITEK cung cấp giải pháp chuyên biệt cho ngành Du lịch, Nhà hàng, Khách sạn, giúp quản lý đặt chỗ và CSKH qua tổng đài hiệu quả."
+86,Other,Lĩnh vực,"Đối với ngành Giáo dục đào tạo, giải pháp của MITEK giúp quản lý các cuộc gọi tư vấn tuyển sinh và theo dõi lịch sử tương tác của học viên."
+87,Hardware,Thiết bị,"MITEK còn cung cấp các thiết bị đầu cuối cần thiết như Tổng đài Yeastar, Tai nghe Yealink, và Điện thoại IP Yealink cho doanh nghiệp."
+88,Support,Hỗ trợ,"MITEK cam kết hỗ trợ khách hàng qua nhiều kênh như Email, kênh Chat (Zalo, Skype), và sẵn sàng hỗ trợ nhanh qua Hotline đối với các sự cố gấp."
+89,Support,Hỗ trợ,Khách hàng muốn Backup ghi âm về Server riêng có thể cung cấp tài khoản SFTP để MITEK thực hiện đồng bộ hóa hàng ngày.
+90,Benefits,Lợi ích chung,"Mục tiêu cuối cùng của MITEK là giúp khách hàng tạo ra các trải nghiệm đáng nhớ và duy trì mức độ trung thành cao, từ đó thúc đẩy tăng doanh số một cách hiệu quả."
+91,MiPBX,MiPBX: Vận hành,"Để đảm bảo độ ổn định cao, công nghệ tổng đài MiPBX được chạy trên hạ tầng Cloud, xử lý thông minh trên nhiều máy chủ back-up riêng biệt."
+92,MiPBX,MiPBX: Báo cáo,"MiPBX cung cấp tính năng Quản lý ghi âm tính cước cuộc gọi, cho phép quản lý chi tiết cước gọi ra và ghi âm cuộc gọi ứng với mỗi nhân viên."
+93,MiPBX,MiPBX: Log,Dữ liệu khách hàng và Log cuộc gọi mặc định được lưu trữ trong 1 năm; khách hàng có thể mua thêm gói lưu trữ nếu có nhu cầu lưu giữ lâu hơn.
+94,MiPBX,MiPBX: Di động,"Nhờ ứng dụng di động trên Smartphone, nhân viên có thể gọi ra bằng đầu số của công ty (số Extension) ở bất cứ đâu, tăng tính chuyên nghiệp và dễ quản lý."
+95,MiCXM,MiCXM: Telesales,MiCXM hỗ trợ đội ngũ Telesales bằng cách cung cấp giao diện trực quan và tính năng quay số định trước để thực hiện các chiến dịch gọi ra một cách hiệu quả và tối ưu.
+96,MiCXM,MiCXM: Kênh Web,"Ngoài các kênh truyền thống, MiCXM còn hỗ trợ tương tác qua Web Chat và tính năng Push-to-Talk, cho phép khách hàng bắt đầu cuộc gọi trực tiếp từ website."
+97,MiCXM,MiCXM: Chất lượng,Hệ thống MiCXM cho phép các quản lý phân quyền Agent với các kỹ năng phù hợp và sử dụng định tuyến cuộc gọi tự động để tăng năng suất phục vụ chăm sóc khách hàng.
+98,MiDesk,MiDesk: Facebook,"MiDesk là một phần mềm hỗ trợ khách hàng trên mạng xã hội lý tưởng, nó tích hợp sâu với Facebook và ngay lập tức tạo ticket khi nhận được bình luận hay đề cập (mention) trên Fanpage."
+99,MiDesk,MiDesk: Tự động hóa,"Tính năng tự động hóa thông minh giúp quy trình làm việc của nhân viên hỗ trợ trở nên dễ dàng và nhanh chóng hơn, góp phần nâng cao năng suất làm việc của nhân viên CSKH."
+100,MiDesk,MiDesk: Kiến thức,"Nhân viên CSKH trên MiDesk có thể sử dụng kho kiến thức với nhiều thông tin tra cứu, giúp ít gây ra lỗi hơn và xử lý được hầu hết các yêu cầu của khách hàng."
+101,MiDesk,MiDesk: POS,"MiDesk hỗ trợ khách hàng trên nhiều kênh online & offline, bao gồm cả các ứng dụng trên smartphone cho đến các điểm bán hàng (POS)."
+102,Other,RAG: Ưu điểm,"Lợi ích của Đa kênh hợp nhất (Omni-channel) so với Multi-channel là khả năng tối ưu hóa việc hỗ trợ, chăm sóc khách hàng trên một hệ thống duy nhất, tiết kiệm nguồn lực."
+103,Other,RAG: Ưu điểm,Hệ thống Omni-channel của MITEK giúp thu thập và thống kê thông tin của khách hàng nhanh chóng vì tất cả các kênh tương tác có sự liên kết dữ liệu với nhau.
+104,Case Study,Case Study,"Công ty TNHH Hoàng Kim Mỹ (Hoàng Kim Mỹ) hài lòng với MiPBX vì chi phí rẻ và cố định, cùng sự hỗ trợ nhanh chóng từ cả MITEK và nhà mạng FPT thông qua nhóm Zalo."
+105,Case Study,Case Study,"Nhà xe Duy Tân đặc biệt hài lòng với sự ổn định của hệ thống tổng đài MiPBX và khả năng giải quyết sự cố rất nhanh chóng, điều rất quan trọng với tỷ lệ đặt xe lên đến hàng trăm cuộc mỗi ngày."
+106,MiPBX,MiPBX: Quản lý,"Khi một User/Extension đang nói chuyện với khách hàng mà rớt mạng, cuộc gọi được ghi âm đến đoạn User rớt mạng (hiểu là Hangup) do ghi âm được thực hiện từ phía Server."
+107,MiDesk,MiDesk: Định nghĩa,"Trong hệ thống MiDesk, Agent là thuật ngữ chỉ nhân viên tiếp nhận trực tiếp nhu cầu của khách hàng qua điện thoại, với mục đích tư vấn hoặc bán hàng."
+108,MiDesk,MiDesk: Định nghĩa,"Ticket được xem là một yêu cầu phát sinh của khách hàng bên ngoài hoặc trong nội bộ tổ chức, có thể là câu hỏi, một vấn đề cần giải quyết, hoặc một khiếu nại."
+109,Integration,Tích hợp CRM,"Để tích hợp MiPBX hoặc MiCXM với hệ thống CRM hiện tại của khách hàng, cần có Dev để tích hợp qua tài liệu API MITEK cung cấp."
+110,Integration,Tích hợp CRM,"Khách hàng cần cung cấp URL Webhook để nhận thông tin cuộc gọi từ MITEK, sau đó xử lý nghiệp vụ tương ứng trên CRM của khách hàng."
+111,Other,So sánh SP,"MiPBX là giải pháp hạ tầng thoại, tập trung vào việc quản lý cuộc gọi vào/ra và nội bộ trong doanh nghiệp."
+112,Other,So sánh SP,"MiCXM là phần mềm CRM Contact Center, tập trung vào quản trị đội ngũ Telesales và tối ưu hóa các chiến dịch gọi ra (Outbound)."
+113,Other,So sánh SP,"MiDesk là phần mềm Hỗ trợ khách hàng, tập trung vào quản lý yêu cầu (Ticket) và đảm bảo tính liền mạch của các kênh tương tác phi thoại (non-voice)."
+114,MiPBX,MiPBX: Cấu hình,"Khi muốn Backup ghi âm MiPBX về Server riêng, khách hàng cần cung cấp tài khoản SFTP và chuẩn bị cấu hình server (ví dụ: 4vCPU, 4vRAM, 1TB) tùy thuộc vào dung lượng."
+115,MiCXM,MiCXM: Chi phí,Giải pháp MiCXM duy trì hiệu quả chi phí vì nó hoạt động liên tục với cơ sở hạ tầng hiện có và không đòi hỏi các máy chủ cấp ngành công nghiệp đắt tiền.
+116,MiDesk,MiDesk: Mô hình,"MiDesk là một nền tảng số quản trị trải nghiệm khách hàng đa kênh hợp nhất được triển khai theo mô hình SaaS, giúp các doanh nghiệp triển khai hệ thống dịch vụ khách hàng nhanh chóng."
+117,MiDesk,MiDesk: Mobile,MiDesk cho phép nhân viên truy cập và xử lý các Ticket CSKH thông qua ứng dụng trên App Store và Google Play.
+118,MiPBX,MiPBX: Quản lý,"MiPBX cung cấp khả năng quản lý chi tiết lịch sử cuộc gọi, bao gồm báo cáo cuộc gọi vào, cuộc gọi ra, cuộc gọi nhỡ, cuộc gọi trả lời và không trả lời."
+119,MiCXM,MiCXM: Công nghệ,MiCXM giảm chi phí hoạt động lên đến 70% và làm tăng lợi nhuận hoạt động cho Contact Center nhờ việc sử dụng công nghệ thông minh với chi phí cạnh tranh.
+120,MiCXM,MiCXM: Kênh,"Không như hệ thống chăm sóc khách hàng truyền thống chỉ tương tác kênh thoại, MiCXM cho phép tương tác đa kênh bao gồm Voice, E-mail, Chat Web, Facebook, SMS, và Fax."
+121,MiDesk,MiDesk: Queue,"Trong phần mềm MiDesk, việc thiết lập Queue (Hàng đợi) có mức độ ưu tiên theo Rule, trong đó Rule cao nhất ở mức độ là 0, còn từ 1 trở đi là thấp dần."
+122,MiDesk,MiDesk: Quản lý,"MiDesk giúp doanh nghiệp đồng bộ các dữ liệu như lượng khách hàng, tồn kho, đơn hàng từ tất cả các kênh bán hàng Online vào một nơi duy nhất."
+123,MiDesk,MiDesk: Lợi thế,MiDesk phù hợp với mọi quy mô doanh nghiệp; ví dụ: có thể quản lý hàng chục Fanpage trên Facebook chỉ tại 1 giao diện duy nhất.
+124,MiDesk,MiDesk: Mobile,"Với việc sử dụng tổng đài MiDesk, nhân viên có thể gọi ra bằng đầu số của công ty bất cứ đâu thông qua ứng dụng trên smartphone."
+125,Other,Tầm nhìn,MITEK J.S.C chọn lựa cho mình sứ mệnh thấu hiểu và phát triển những ứng dụng công nghệ tiên tiến trong lĩnh vực CNTT và Viễn thông tại Việt Nam và quốc tế.
+126,Other,Mục tiêu,"Mục tiêu là vì sự phồn vinh của khách hàng, của MITEK và của Việt Nam thông qua các giải pháp dịch vụ khách hàng, quản lý bán hàng và Marketing tự động hóa."
+127,MiCXM,MiCXM: Mục tiêu,"MiCXM được thiết kế cho các trung tâm chăm sóc khách hàng cần một giải pháp với chi phí hiệu quả, có thể phát triển mở rộng khi có nhu cầu."
+128,MiDesk,MiDesk: Lợi ích,"MiDesk mang lại lợi ích là chuyên nghiệp hóa dịch vụ khách hàng, khiến nhân viên CSKH ít gây ra lỗi hơn và xử lý được hầu hết các yêu cầu của khách hàng."
+129,MiDesk,MiDesk: Lợi ích,"MiDesk giúp doanh nghiệp tạo ra các trải nghiệm khách hàng đáng nhớ và duy trì mức độ trung thành của khách hàng, từ đó thúc đẩy tăng doanh số một cách hiệu quả."
+130,Support,Hỗ trợ,"MITEK có đội ngũ kỹ thuật viên giàu kinh nghiệm và trình độ chuyên môn cao, luôn sẵn sàng hỗ trợ khách hàng trong suốt thời gian sử dụng dịch vụ."
+131,Support,Hỗ trợ,"Khách hàng có thể nhận được sự hỗ trợ và giải đáp qua nhiều kênh tương tác khác nhau như group Zalo, email, Skype, hoặc gọi vào hotline 19001238."
+132,Other,Lĩnh vực,"Các giải pháp của MITEK phục vụ đa dạng các lĩnh vực như Tài chính, Chứng khoán, Ngân hàng, Giáo dục đào tạo, Bất động sản, Bảo hiểm, Dịch vụ Du lịch, và Thẩm mỹ viện/Spa."
+133,MiCXM,MiCXM: Kịch bản,"MiCXM cho phép doanh nghiệp tự thiết lập kịch bản chăm sóc khách hàng và quy trình bán hàng theo từng bước chi tiết, giúp nhân viên tuân thủ nghiệp vụ một cách nhất quán."
+134,MiCXM,MiCXM: Tích hợp,"MiCXM hỗ trợ tích hợp với các hệ thống ERP và SAP của doanh nghiệp để đồng bộ hóa dữ liệu tồn kho, đơn hàng và hồ sơ khách hàng ngay trên giao diện Agent."
+135,MiPBX,MiPBX: Bảo mật,"MiPBX sử dụng các giao thức bảo mật tiên tiến như TLS/SRTP để mã hóa các cuộc gọi, đảm bảo thông tin trao đổi giữa Agent và khách hàng không bị nghe lén."
+136,MiDesk,MiDesk: Phân tích,"Hệ thống MiDesk có khả năng phân tích cảm xúc (Sentiment Analysis) từ các tương tác chat và comment, giúp tự động ưu tiên các ticket có mức độ tiêu cực cao."
+137,MiDesk,MiDesk: Gộp phiếu,MiDesk cho phép gộp nhiều phiếu (ticket) liên quan của cùng một khách hàng thành một phiếu duy nhất để nhân viên xử lý vấn đề một cách toàn diện và không bị trùng lặp.
+138,MiDesk,MiDesk: Todo-list,"Tính năng quản lý todo-list tích hợp trong MiDesk giúp nhân viên theo dõi các việc cần xử lý cho từng phiếu yêu cầu, đảm bảo không bỏ sót nhiệm vụ."
+139,MiDesk,MiDesk: Phân loại,"MiDesk cung cấp chức năng Gán tag để phân loại tiến trình xử lý phiếu, giúp quản lý và lọc dữ liệu ticket theo các tiêu chí cụ thể như ""đang chờ"", ""đã chuyển"", ""đã giải quyết""."
+140,MiPBX,MiPBX: Ghi âm,"Hệ thống ghi âm của MiPBX cho phép người quản lý tìm kiếm và nghe lại ghi âm dựa trên nhiều tiêu chí như số điện thoại khách hàng, thời gian, hoặc tên Agent."
+141,MiCXM,MiCXM: Real-time,Chức năng Realtime Monitoring trên MiCXM cho phép Supervisor/Admin nghe xen (Barge-in) hoặc nghe thì thầm (Whisper) vào cuộc gọi để hỗ trợ Agent mới.
+142,MiCXM,MiCXM: Báo cáo,"MiCXM cung cấp báo cáo chi tiết về tỷ lệ chuyển đổi (Conversion Rate) từ các chiến dịch gọi ra (Outbound Campaign), giúp đánh giá hiệu quả của đội ngũ Telesales."
+143,MiDesk,MiDesk: Tùy chỉnh,"Giao diện làm việc của MiDesk có thể được tùy chỉnh bổ sung trường động thông tin khách hàng, giúp doanh nghiệp quản lý các trường dữ liệu đặc thù."
+144,MiDesk,MiDesk: Lịch làm việc,"MiDesk hỗ trợ thiết lập lịch làm việc và lịch nghỉ các ngày lễ, cuối tuần, giúp hệ thống tự động điều chỉnh quy trình phân bổ ticket."
+145,MiPBX,MiPBX: Auto-dialer,"MiPBX có thể tích hợp Auto-dialer (Quay số tự động) để tăng tốc độ gọi ra hàng loạt, một tính năng quan trọng cho các trung tâm Telesales lớn."
+146,MiCXM,MiCXM: Lead,"MiCXM cho phép tự động tổng hợp sẵn tất cả các Lead (comment, tin nhắn, cuộc gọi,...) từ đa kênh và tự động phân bổ cho nhân viên theo các quy tắc đã định."
+147,MiDesk,MiDesk: Phản hồi,"MiDesk giúp doanh nghiệp phản hồi khách hàng nhanh chóng nhờ khả năng tích hợp và đồng bộ dữ liệu khách hàng từ mọi kênh, nâng cao trải nghiệm khách hàng ngay từ lần đầu tiên."
+148,MiDesk,MiDesk: Cá nhân hóa,"MiDesk giúp thực hiện cá nhân hóa tương tác bằng cách cho phép nhân viên truy cập lịch sử mua hàng, sở thích cá nhân, và các tương tác trước đó của khách hàng."
+149,MiDesk,MiDesk: CX,"MiDesk hỗ trợ doanh nghiệp vẽ được sơ đồ về hành trình khách hàng (Customer Journey), từ điểm chạm đầu tiên đến khi họ kết nối với nhân viên hỗ trợ."
+150,MiDesk,MiDesk: Đồng bộ,Khả năng đồng bộ dữ liệu giữa các kênh trên MiDesk đảm bảo khách hàng nhận được sự quan tâm thật sự và được giải quyết vấn đề một cách nhất quán trên mọi nền tảng.
+151,MiCXM,MiCXM: Định tuyến,"MiCXM sử dụng ACD (Automatic Call Distribution) thông minh, định tuyến cuộc gọi đến Agent có kỹ năng phù hợp nhất hoặc Agent đã tương tác với khách hàng gần nhất."
+152,MiCXM,MiCXM: Chất lượng,Hệ thống MiCXM cung cấp các công cụ Quality Monitoring để quản lý đánh giá chất lượng cuộc gọi của Agent theo các tiêu chí chuẩn mực của Contact Center.
+153,MiCXM,MiCXM: Tác vụ,"MiCXM giúp Agent thực hiện các tác vụ sau cuộc gọi (Wrap-up) như cập nhật trạng thái cuộc gọi, ghi chú tóm tắt và lên lịch cho cuộc gọi tiếp theo một cách nhanh chóng."
+154,MiPBX,MiPBX: Độ ổn định,"MiPBX có cơ chế Failover tự động; nếu một trung kế (SIP Trunk) gặp sự cố, hệ thống sẽ ngay lập tức chuyển sang trung kế dự phòng để duy trì cuộc gọi và kết nối."
+155,MiPBX,MiPBX: Báo cáo,"Báo cáo của MiPBX bao gồm các chỉ số quan trọng như AHT (Average Handle Time), ASA (Average Speed of Answer) và FCR (First Contact Resolution) để đo lường hiệu suất phục vụ."
+156,MiPBX,MiPBX: Tương thích,"MiPBX tương thích với nhiều loại thiết bị đầu cuối như điện thoại IP, softphone trên máy tính, và ứng dụng di động, mang lại sự linh hoạt tối đa cho nhân viên."
+157,MiDesk,MiDesk: Omnichannel,"MiDesk giải quyết vấn đề bỏ lỡ yêu cầu từ khách hàng bằng cách tự động chuyển đổi tin nhắn SMS, Email, Chat, Comment, và cuộc gọi nhỡ thành Ticket thông minh."
+158,MiDesk,MiDesk: Tốc độ,"MiDesk giúp tăng tốc độ Bán hàng và CSKH nhờ dữ liệu tập trung và quy trình tự động, từ đó rút ngắn chu kỳ bán hàng và nâng cao trải nghiệm khách hàng."
+159,MiDesk,MiDesk: KPI,"Báo cáo của MiDesk hỗ trợ theo dõi KPI hiệu suất của nhân viên theo thời gian phản hồi và thời gian xử lý Ticket, đảm bảo chất lượng dịch vụ theo SLA."
+160,MiCXM,MiCXM: Kế hoạch,"MiCXM hỗ trợ lập Kế hoạch gọi ra chi tiết cho từng chiến dịch, bao gồm việc đặt giới hạn số lần gọi lại cho một khách hàng và khoảng thời gian giữa các lần gọi."
+161,MiCXM,MiCXM: Giao diện,"Giao diện MiCXM được thiết kế trực quan, giúp Agent mới dễ dàng làm quen và thao tác, giảm thiểu thời gian đào tạo và tăng năng suất ngay lập tức."
+162,Technology,MITEK: Công nghệ,"Giải pháp của MITEK sử dụng nền tảng điện toán đám mây (Cloud Computing), cho phép doanh nghiệp dễ dàng mở rộng quy mô mà không cần đầu tư lớn vào cơ sở hạ tầng vật lý."
+163,Hardware,Thiết bị,MITEK cung cấp các thiết bị tổng đài và hội nghị như Tổng đài Yeastar và Thiết bị hội nghị để hỗ trợ triển khai hệ thống cho doanh nghiệp.
+164,Hardware,Thiết bị,"Các sản phẩm Yealink được cung cấp bao gồm Tai nghe Yealink và Điện thoại IP Yealink, đây là các thiết bị đầu cuối tương thích hoàn hảo với tổng đài Cloud MiPBX."
+165,MiCXM,MiCXM: Tích hợp,"MiCXM có khả năng tích hợp các nền tảng truyền thông phổ biến nhất hiện nay như thoại, email, chat, sms, fax, cho phép Doanh nghiệp dễ dàng tương tác với khách hàng qua nhiều kênh."
+166,MiCXM,MiCXM: Định tuyến,"MiCXM giúp tối ưu hóa cuộc gọi thông qua định tuyến dựa trên kỹ năng, đồng thời phân phối cuộc gọi tự động, tích hợp sẵn với các hệ thống IVR."
+167,MiPBX,MiPBX: Quản trị,"Cài đặt và quản lý tổng đài MiPBX có thể được thực hiện từ xa thông qua giao diện Web, không cần phải có mặt tại văn phòng."
+168,MiDesk,MiDesk: Khách hàng,"Khách hàng chính là tài sản của bất kỳ doanh nghiệp nào, nếu hệ thống chăm sóc khách hàng không hiệu quả, khách hàng có thể rời bỏ bạn bất kỳ lúc nào."
+169,MiDesk,MiDesk: Mở rộng,"MiDesk dễ dàng nâng cấp gói dịch vụ theo nhu cầu mở rộng mô hình số lượng người dùng của doanh nghiệp bạn, cũng như nâng cấp tính năng tiện ích khi có nhu cầu."
+170,MiDesk,MiDesk: Module,"MiDesk được thiết kế theo module tiện ích, cho phép bạn có thể đăng ký sử dụng một tiện ích riêng lẻ phù hợp với nhu cầu sử dụng của doanh nghiệp."
+171,MiPBX,MiPBX: Cước,MiPBX giúp tiết kiệm cước phí hàng tháng so với tổng đài thông thường do miễn phí hoàn toàn các cuộc gọi nội bộ giữa các chi nhánh.
+172,MiCXM,MiCXM: Thách thức,"Thách thức của dịch vụ khách hàng hiện nay không chỉ dừng lại ở giá cả hàng hóa, mà còn đòi hỏi doanh nghiệp phải nâng cao chất lượng phục vụ qua nhiều kênh tương tác."
+173,Other,Chung: BPO,"MITEK cung cấp giải pháp cho lĩnh vực Thuê ngoài (BPO Outsourcing), giúp các công ty BPO triển khai Contact Center hiệu quả và tiết kiệm."
+174,Support,Chung: Hỗ trợ,"Hỗ trợ kỹ thuật được thực hiện qua Mail, kênh Chat (Zalo, Skype); các sự cố gấp có thể gọi Hotline hoặc đầu mối liên hệ chính để được hỗ trợ nhanh chóng."
+175,Other,Chung: Bảo mật,"Các hệ thống của MITEK cam kết bảo mật bằng văn bản và đạt chứng chỉ ISO 27001:2013, đảm bảo an toàn dữ liệu khách hàng."
+176,Other,Mục đích,"Sản phẩm và dịch vụ MITEK cung cấp dựa trên nền tảng điện toán đám mây, triển khai nhanh chóng, tiện dụng, đáp ứng cho tất cả các quy mô doanh nghiệp từ nhỏ đến lớn."
+177,Other,Mục đích,"MiCXM được thiết kế nhằm giúp doanh nghiệp phục vụ khách hàng tốt hơn, chuyên nghiệp hơn, từ đó thu hút thêm khách hàng mới và giữ được khách hàng cũ."
+178,Other,Mục đích,"Mục tiêu của MiDesk là cung cấp giải pháp dịch vụ khách hàng, chăm sóc khách hàng đa kênh toàn diện."
+179,MiPBX,MiPBX: Tính năng,"MiPBX giúp doanh nghiệp triển khai một hệ thống tổng đài Cloud nhanh chóng và hiệu quả mà không cần phải đầu tư cơ sở hạ tầng, cáp điện thoại, thiết bị tổng đài."
+180,MiPBX,MiPBX: Kết nối,Tất cả những gì cần để sử dụng MiPBX là một đường truyền Internet ổn định và điện thoại đầu cuối (IP Phone hoặc Softphone).
+181,MiCXM,MiCXM: Lợi ích,MiCXM là nền tảng giúp doanh nghiệp dẫn đầu về CX (Trải nghiệm khách hàng) trong kỷ nguyên số.
+182,MiDesk,MiDesk: Lợi ích,"MiDesk OmniChannel là ""Trí nhớ tập trung"" giúp Doanh nghiệp thấu hiểu và chinh phục từng Khách hàng thông qua dữ liệu tương tác liền mạch."
+183,MiDesk,MiDesk: Lợi ích,"MiDesk giúp doanh nghiệp tăng lợi thế cạnh tranh rất nhiều so với các đối thủ, vì khách hàng luôn muốn liên hệ dễ dàng với doanh nghiệp."
+184,MiDesk,MiDesk: Tính năng,"Với MiDesk, tất cả mọi thứ đã được đơn giản hóa: Dashboard giám sát trực quan, hỗ trợ đa kênh trên một giao diện, và phối hợp nhịp nhàng giữa các bộ phận."
+185,Info,Thông tin,Giờ làm việc chính thức của MITEK là từ Thứ Hai đến Thứ Sáu: 8h00 – 18h00.
+186,Info,Thông tin,MITEK không làm việc vào Thứ Bảy và Chủ nhật.
+187,Info,Thông tin,"Địa chỉ của CÔNG TY CỔ PHẦN CÔNG NGHỆ DỊCH VỤ MITEK là: 271/10 An Dương Vương, Phường 2, Quận 5, TP.Hồ Chí Minh."
+188,Info,Thông tin,Khách hàng cần tư vấn có thể liên hệ qua Hotline: 1900 1238 hoặc Email: contact@mitek.vn.
+189,Info,Thông tin,"MITEK thường xuyên cập nhật Blog và tin tức mới nhất về công nghệ, giải pháp hạ tầng, và phần mềm doanh nghiệp."
+190,Info,Thông tin,MITEK được thành lập từ năm 2016 (Thông tin từ Footer bản quyền).
+191,MiCXM,MiCXM: Lợi thế,"MiCXM kết hợp các nền tảng truyền thông phổ biến nhất hiện nay, cho phép doanh nghiệp dễ dàng tương tác với khách hàng của mình qua nhiều kênh một cách tốt nhất."
+192,MiCXM,MiCXM: Thiết kế,"MiCXM được thiết kế theo module hóa với nhiều tính năng phong phú và các ứng dụng dựa trên nền tảng web, giúp tinh giản đầu tư triển khai ban đầu."
+193,MiPBX,MiPBX: Ưu điểm,Tổng đài Cloud MiPBX giúp doanh nghiệp tiết kiệm cước phí hàng tháng so với tổng đài thông thường do không phát sinh chi phí gọi nội bộ.
+194,MiPBX,MiPBX: Ưu điểm,"Tổng đài Cloud có khả năng sao lưu và khôi phục dễ dàng, cùng với bảo mật dữ liệu chặt chẽ hơn so với tổng đài truyền thống."
+195,MiDesk,MiDesk: Lợi ích,Việc sử dụng giải pháp tích hợp đa kênh như MiDesk mang lại lợi thế cạnh tranh rất lớn so với các đối thủ trên thị trường.
+196,MiDesk,MiDesk: Lợi ích,"MiDesk giúp cải thiện mức độ hài lòng của khách hàng nhờ hệ thống xử lý tự động phân bổ thông minh, khiến khách hàng thích thú với khả năng phản hồi thần tốc."
+197,MiCXM,MiCXM: Kênh,"MiCXM cho phép tương tác đa kênh bao gồm Voice, E-mail, Chat Web, Facebook, SMS, và Fax, mở rộng khả năng tiếp cận khách hàng của doanh nghiệp."
+198,MiDesk,MiDesk: Mục tiêu,"MiDesk có thể giúp doanh nghiệp quản lý hàng chục Fanpage chỉ tại một giao diện duy nhất, tiết kiệm thời gian và tăng hiệu quả quản lý gấp nhiều lần."
+199,MiDesk,MiDesk: Phạm vi,"MiDesk thích nghi với nhiều quy mô doanh nghiệp khác nhau, từ các công ty lớn (Enterprise) cho đến các công ty khởi nghiệp (Start-up)."
+200,MiPBX,MiPBX: Call Center,Chuyển đổi số trong doanh nghiệp thường bắt đầu từ những cuộc gọi; khám phá ngay sức mạnh của Tổng đài Call Center MiPBX để thúc đẩy quá trình này.
+201,MiCXM,MiCXM: Mục tiêu,MiCXM giúp nâng cao hiệu quả quản trị trung tâm dịch vụ khách hàng và đội nhóm nhân viên Telesales.
+202,MiPBX,MiPBX: Ghi âm,Ghi âm cuộc gọi mặc định được lưu trữ trong 1 tháng; khách hàng có thể mua thêm gói lưu trữ nếu có nhu cầu lưu trữ lâu hơn.
+203,MiPBX,MiPBX: Vận hành,"MITEK đảm nhiệm việc vận hành tổng đài cho doanh nghiệp, loại bỏ gánh nặng quản lý tổng đài khỏi khách hàng."
+204,Other,Chung: Tầm nhìn,MITEK chọn lựa sứ mệnh thấu hiểu và phát triển những ứng dụng công nghệ tiên tiến trong lĩnh vực CNTT và Viễn thông.
+205,Other,Chung: Mục tiêu,"MITEK cam kết mang lại sự phồn vinh cho khách hàng, của MITEK và của Việt Nam."
+206,MiDesk,MiDesk: Lợi ích,"MiDesk giúp quản lý liền mạch tương tác với khách hàng từ tất cả các kênh Facebook, Zalo, Email, Livechat, Call, đảm bảo tính thống nhất trong dịch vụ."
+207,MiCXM,MiCXM: Tăng trưởng,"MiCXM được thiết kế để giúp doanh nghiệp thu hút thêm khách hàng mới và giữ được khách hàng cũ, nâng cao vị thế cạnh tranh của Doanh nghiệp trên thị trường."
+208,MiPBX,MiPBX: Vận hành,"Để thay đổi kịch bản tổng đài (ví dụ: thay đổi IVR), khách hàng chỉ cần gửi kịch bản mới vào Mail: contact@mitek.vn để đội ngũ kỹ thuật xử lý."
+209,MiPBX,MiPBX: Đầu số,MiPBX hoàn toàn không có giới hạn gì về đầu số tổng đài có thể kết nối và sử dụng.
+210,MiDesk,MiDesk: Hợp đồng,Thời gian mỗi hợp đồng dịch vụ MiDesk được cung cấp theo tháng hoặc theo năm.
+211,Voice Brandname,Voice Brandname,"Voice Brandname (Cuộc gọi thương hiệu) là giải pháp hiển thị tên thương hiệu của doanh nghiệp trên màn hình điện thoại khách hàng khi gọi đi, thay vì chỉ hiển thị dãy số điện thoại."
+212,Voice Brandname,Voice Brandname,"Lợi ích chính của Voice Brandname là tăng tỷ lệ bắt máy và tăng mức độ tin cậy của khách hàng, vì họ biết chính xác đơn vị nào đang gọi đến."
+213,Voice Brandname,Voice Brandname,"Sử dụng Voice Brandname giúp doanh nghiệp giảm chi phí đầu tư cho việc mua đầu số tổng đài đẹp, vì tên thương hiệu đã hiển thị rõ ràng và tăng độ nhận diện."
+214,Zalo Mini App,Zalo Mini App,"Zalo Mini App là những ""ứng dụng nhỏ"" chạy trực tiếp trên nền tảng Zalo, cho phép doanh nghiệp tiếp cận hơn 70 triệu khách hàng tiềm năng mà người dùng không cần tải thêm ứng dụng."
+215,Zalo Mini App,Zalo Mini App,"Đối với ngành Bán lẻ, Zalo Mini App là công cụ đắc lực để tối ưu chi phí vận hành, quản lý dữ liệu khách hàng thông minh và theo dõi hành vi mua sắm chi tiết."
+216,Zalo Mini App,Zalo Mini App,"Zalo Mini App giúp doanh nghiệp xây dựng ứng dụng với các chức năng được đóng gói sẵn như Mua sắm, Tích lũy điểm thưởng, Nhận thông tin CTKM ngay trên Zalo."
+217,Integration,Tích hợp CRM,"Giải pháp Tích hợp Facebook, Zalo OA vào Zoho CRM giúp nhân viên tiếp nhận và xử lý các tương tác của khách hàng trên Social Media ngay trên nền tảng CRM."
+218,Integration,Tích hợp CRM,Cửa sổ OmniChannel quản lý kênh Facebook (chat/comment) và Zalo OA (tin nhắn) được hiển thị trực quan trong giao diện Zoho CRM.
+219,Integration,Tích hợp CRM,"Nhân viên dễ dàng tiếp nhận, xử lý và quản lý lịch sử tương tác của cả hai kênh Facebook và Zalo OA tập trung trên nền tảng Zoho CRM, không bị phân tán."
+220,Zalo,Zalo OA,"Để tích hợp Zalo OA với Zoho Desk/CRM, cần đảm bảo Zalo OA đã xác thực và nâng cấp gói trả phí theo yêu cầu của Zalo."
+221,Voice Brandname,Voice Brandname,Dịch vụ Voice Brandname của MITEK được đăng ký hồ sơ chính thức với nhà mạng và sẽ không bị đánh dấu là Spam trên điện thoại người nhận.
+222,Voice Brandname,Voice Brandname,"Dịch vụ Voice Brandname có thể được ứng dụng trong đa lĩnh vực, đa ngành nghề để Quảng cáo (Telemarketing) và CSKH với việc kết nối hai chiều linh hoạt."
+223,MiCXM,MiCXM: Tích hợp,"Nền tảng giao tiếp đa kênh MiCRM (MiCXM) kết nối liền mạch giữa các kênh tương tác như Facebook, Zalo OA, Hotline, giúp Doanh nghiệp tăng tốc độ xử lý."
+224,MiPBX,MiPBX: Lợi ích,MiPBX hỗ trợ khai báo số SIP Trunking theo số hotline có sẵn của doanh nghiệp và giúp cho doanh nghiệp tận dụng số tổng đài ban đầu của mình.
+225,Other,Tổng kết,"MITEK là Đối tác Giải pháp của Zalo Mini App, giúp các doanh nghiệp xây dựng ứng dụng, đem lại trải nghiệm tốt nhất cho người dùng trên nền tảng Zalo."
+226,MiPBX,MiPBX: Hỗ trợ,"MITEK đảm nhận việc vận hành tổng đài cho doanh nghiệp, giúp khách hàng tiết kiệm thời gian quản lý và vận hành hệ thống."
+227,MiCXM,MiCXM: Tầm nhìn,"MiCXM được thiết kế theo module hóa, các ứng dụng dựa trên nền tảng web giúp tinh giản đầu tư triển khai ban đầu."
+228,MiDesk,MiDesk: Lợi thế,"MiDesk cho phép quản lý liền mạch tương tác với khách hàng từ tất cả các kênh, đảm bảo tính thống nhất trong dịch vụ."
+229,Other,Chung: Cam kết,"MITEK luôn sẵn sàng đồng hành cùng doanh nghiệp và cung cấp hỗ trợ, tư vấn chi tiết cho mọi nhu cầu dịch vụ."
+230,Other,Chung: Liên hệ,Khách hàng có nhu cầu cần tư vấn cụ thể hơn về dịch vụ có thể liên hệ qua email contact@mitek.vn hoặc hotline 1900 1238.
+231,Greeting,Chào hỏi,"Xin chào bạn, tôi có thể giúp gì cho bạn hôm nay không ạ?"
+232,Greeting,Chào hỏi,"Chào bạn, bạn đang tìm hiểu thông tin nào để tôi hỗ trợ ngay?"
+233,Greeting,Chào hỏi,"Vâng, xin chào bạn. Bạn muốn bắt đầu từ chủ đề nào ạ?"
+234,Greeting,Chào hỏi,Chào mừng bạn đến với hệ thống. Tôi có thể hỗ trợ điều gì cho bạn?
+235,Greeting,Chào hỏi,"Chào bạn, hy vọng bạn đang có một ngày thuận lợi. Bạn muốn tra cứu gì ạ?"
+236,Greeting,Chào hỏi,"Xin chào, bạn cần hỗ trợ nhanh hay muốn tìm hiểu theo từng bước?"
+237,Greeting,Chào hỏi,"Chào bạn nhé, bạn muốn hỏi về thông tin nào trước tiên ạ?"
+238,Greeting,Chào hỏi,Rất vui được gặp bạn. Tôi có thể trả lời câu hỏi nào cho bạn hôm nay?
+239,Greeting,Chào hỏi,"Xin chào bạn, bạn đang cần hỗ trợ về dịch vụ hay tài liệu nào?"
+240,Greeting,Chào hỏi,"Chào bạn, cảm ơn bạn đã sử dụng hệ thống. Bạn đang băn khoăn điều gì ạ?"
+241,Company,Giới thiệu,"MITEK J.S.C là công ty cung cấp nền tảng và giải pháp công nghệ trong lĩnh vực CNTT và Viễn thông, phục vụ doanh nghiệp tại Việt Nam và quốc tế."
+242,Company,Sứ mệnh,"Sứ mệnh của MITEK là xây dựng các nền tảng số giúp doanh nghiệp tối ưu quản trị bán hàng, trải nghiệm khách hàng và vận hành tự động."
+243,Company,Tầm nhìn,"MITEK hướng đến trở thành đơn vị dẫn đầu trong lĩnh vực Contact Center, CRM, và các giải pháp dịch vụ khách hàng đa kênh (Omni-Channel)."
+244,Company,Giá trị cốt lõi,MITEK đề cao 3 giá trị chính: Chuyên nghiệp – Sáng tạo – Cam kết đồng hành cùng khách hàng.
+245,Company,Bảo mật,"Các hệ thống của MITEK tuân thủ tiêu chuẩn bảo mật quốc tế ISO 27001:2013, đảm bảo an toàn dữ liệu cho doanh nghiệp."
+246,Company,Ngành phục vụ,MITEK cung cấp giải pháp cho đa dạng lĩnh vực: Tài chính – Ngân hàng – Giáo dục – Bất động sản – Logistics – Y tế – Bán lẻ – Dịch vụ.
+247,Company,Địa chỉ,"Trụ sở MITEK: 271/10 An Dương Vương, Phường 2, Quận 5, TP.Hồ Chí Minh."
+248,Company,Liên hệ,Hotline hỗ trợ: 1900 1238 – Email: contact@mitek.vn.
+249,Company,Giờ làm việc,"MITEK làm việc từ Thứ Hai đến Thứ Sáu, 8:00 – 18:00. Thứ Bảy và Chủ nhật nghỉ."
+250,Company,Năm thành lập,"MITEK được thành lập từ năm 2016, hoạt động trong lĩnh vực phần mềm dịch vụ khách hàng."
+251,Product,Giải pháp tổng thể,"MITEK cung cấp hệ sinh thái phần mềm bao gồm MiPBX, MiCXM, MiDesk và MiSMS hỗ trợ toàn diện cho doanh nghiệp."
+252,Product,Triển khai,"Các giải pháp của MITEK được triển khai theo mô hình SaaS/Cloud, giúp giảm chi phí đầu tư phần cứng."
+253,Product,Thiết bị phần cứng,"MITEK cung cấp thiết bị đầu cuối: Tổng đài Yeastar, tai nghe Yealink, điện thoại IP Yealink."
+254,Product,Đối tác công nghệ,"MITEK là đối tác triển khai của các CRM/Helpdesk như Zoho, Salesforce, Zendesk, Freshdesk, HubSpot."
+255,Value,Văn hoá,"Văn hoá MITEK đề cao tính sáng tạo, trách nhiệm và tinh thần làm việc tập thể."
+256,Value,Đổi mới,MITEK liên tục cải tiến sản phẩm và quy trình để mang lại giá trị bền vững cho doanh nghiệp.
+257,Value,Tử tế,"Tinh thần tử tế là giá trị cốt lõi, được duy trì trong cách MITEK làm việc với nội bộ và khách hàng."
+258,Support,Hỗ trợ kỹ thuật,"MITEK hỗ trợ khách hàng qua nhiều kênh như hotline, email, Zalo, Skype và ticket nội bộ."
+259,Support,Triển khai khách hàng,"MITEK luôn đồng hành xuyên suốt quá trình triển khai giải pháp, hướng dẫn nghiệp vụ và đào tạo sử dụng."
+260,Support,Bảo trì,"MITEK cam kết bảo trì, nâng cấp và tối ưu hệ thống để đảm bảo hoạt động ổn định cho doanh nghiệp."
+261,Company,Trách nhiệm,"MITEK luôn nỗ lực hoàn thành đúng cam kết với khách hàng, đối tác và nhân sự nội bộ, đảm bảo mọi dự án triển khai đúng tiến độ và chất lượng."
+262,Company,Trách nhiệm,"Đội ngũ MITEK chịu trách nhiệm đến cùng trong việc hỗ trợ, giải quyết sự cố và tối ưu hiệu suất hệ thống cho doanh nghiệp."
+263,Company,Trách nhiệm khách hàng,"MITEK coi khách hàng là trung tâm, mọi quyết định đều hướng đến trải nghiệm tốt hơn cho doanh nghiệp sử dụng hệ thống."
+264,Company,Trách nhiệm bảo mật,MITEK tuân thủ nghiêm túc các nguyên tắc bảo mật dữ liệu doanh nghiệp theo tiêu chuẩn ISO 27001:2013.
+265,Company,Trách nhiệm xã hội,MITEK tích cực tham gia các hoạt động cộng đồng và hỗ trợ xã hội theo tinh thần phát triển bền vững.
+266,Commitment,Cam kết dịch vụ,"MITEK cam kết cung cấp dịch vụ ổn định, chất lượng cao và hỗ trợ khách hàng 24/7 trong các tình huống khẩn cấp."
+267,Commitment,Cam kết hỗ trợ,"MITEK luôn theo sát doanh nghiệp trong toàn bộ vòng đời sử dụng sản phẩm từ triển khai, đào tạo, vận hành đến tối ưu."
+268,Commitment,Cam kết minh bạch,"MITEK làm việc minh bạch, rõ ràng trong báo giá, hợp đồng, bảo trì và dịch vụ kỹ thuật."
+269,Commitment,Cam kết đồng hành,MITEK coi sự thành công của khách hàng chính là thành công của công ty và cam kết đồng hành lâu dài.
+270,Commitment,Cam kết chất lượng,Tất cả giải pháp của MITEK được kiểm thử và giám sát chất lượng kỹ lưỡng trước khi triển khai cho doanh nghiệp.
+271,Company,Định hướng phát triển,"MITEK định hướng mở rộng hệ sinh thái giải pháp Contact Center, CRM, Ticketing và Marketing Automation."
+272,Company,Định hướng công nghệ,"MITEK tập trung đầu tư vào các công nghệ AI, Cloud, phân tích dữ liệu và tự động hóa quy trình."
+273,Company,Hành trình phát triển,"Kể từ năm 2016, MITEK đã phục vụ hàng nghìn doanh nghiệp trong nhiều lĩnh vực trên cả nước."
+274,Company,Triết lý dịch vụ,MITEK theo đuổi triết lý 'Khách hàng hạnh phúc – Doanh nghiệp thành công – Xã hội phát triển'.
+275,Value,Tinh thần trách nhiệm,"MITEK đề cao tinh thần chịu trách nhiệm, hoàn thành công việc đến nơi đến chốn và không đổ lỗi."
+276,Value,Đoàn kết,"MITEK tin vào sức mạnh tập thể, khuyến khích phối hợp liên phòng ban để giải quyết vấn đề cho khách hàng."
+277,Value,Tôn trọng,"MITEK tôn trọng khách hàng, tôn trọng nhân sự và tôn trọng sự khác biệt trong môi trường làm việc."
+278,Value,Phát triển con người,MITEK đầu tư đào tạo nhân sự nhằm nâng cao năng lực chuyên môn và phát triển sự nghiệp bền vững.
+279,Support,Hỗ trợ chuyên sâu,"MITEK cung cấp đội ngũ hỗ trợ chuyên sâu theo từng sản phẩm: MiPBX, MiCXM, MiDesk, MiSMS."
+280,Support,Giải quyết sự cố,"Hệ thống hỗ trợ kỹ thuật của MITEK đảm bảo SLA nhanh, xử lý sự cố theo mức ưu tiên để giảm thiểu downtime cho khách hàng."
+281,MiPBX,Giới thiệu,"MiPBX là dịch vụ tổng đài Cloud, cho phép doanh nghiệp triển khai hệ thống tổng đài ảo mà không cần đầu tư phần cứng vật lý."
+282,MiPBX,Dịch vụ chính,"MiPBX cung cấp giải pháp Tổng đài Cloud PBX, Cloud Call Center, Auto-Call, VoiceBot/Voice OTP cho doanh nghiệp."
+283,MiPBX,Lợi ích - Chi phí,Sử dụng MiPBX giúp doanh nghiệp tiết kiệm chi phí cài đặt phần cứng và bảo trì so với tổng đài truyền thống.
+284,MiPBX,Lợi ích - Linh hoạt,"MiPBX cho phép mở rộng máy nhánh và chi nhánh dễ dàng, phù hợp với doanh nghiệp từ nhỏ đến lớn, mở rộng không giới hạn."
+285,MiPBX,Lợi ích - Miễn phí nội bộ,Cuộc gọi giữa các chi nhánh nội bộ sử dụng MiPBX hoàn toàn miễn phí.
+286,MiPBX,Tính năng,"IVR & Call Routing automatic — hỗ trợ trả lời tự động, phân tuyến cuộc gọi theo phòng ban."
+287,MiPBX,Tính năng,"Quản lý ghi âm, lưu lịch sử cuộc gọi (gọi vào, gọi ra, cuộc gọi nhỡ) chi tiết cho từng máy nhánh và user."
+288,MiPBX,Tính năng,Chặn cuộc gọi không mong muốn (black-list) để giảm spam / cuộc gọi rác.
+289,MiPBX,Tính năng,Chuyển tiếp cuộc gọi (forward) tự động ra di động/cố định khi tổng đài viên bận hoặc vắng mặt.
+290,MiPBX,Tính năng,API & tích hợp CRM/ERP giúp doanh nghiệp dễ dàng đồng bộ dữ liệu khách hàng và cuộc gọi vào hệ thống CRM.
+291,MiPBX,Dịch vụ Auto-Call,MiPBX hỗ trợ Auto-Call để doanh nghiệp thực hiện hàng trăm đến hàng nghìn cuộc gọi tự động với nội dung preset hoặc VoiceBot.
+292,MiPBX,Dịch vụ VoiceBot/OTP,"MiPBX cung cấp giải pháp VoiceBot / Voice OTP — gửi mã, thông báo tự động bằng giọng nói khi khách hàng cần xác thực."
+293,MiPBX,Phù hợp doanh nghiệp,"MiPBX phù hợp với mọi quy mô doanh nghiệp — từ startup, SMEs đến các doanh nghiệp lớn — nhờ mô hình đám mây linh hoạt."
+294,MiPBX,Thời gian triển khai,MiPBX có thể được triển khai nhanh chóng — doanh nghiệp có thể sử dụng tổng đài sau khoảng 30 phút kể từ khi đăng ký.
+295,MiPBX,Không cần phần cứng,"Với MiPBX, doanh nghiệp không cần mua tổng đài, thiết bị vật lý — chỉ cần Internet và đầu cuối IP/soft-phone."
+296,MiPBX,Hạ tầng & ổn định,"MiPBX chạy trên nền tảng cloud, sử dụng hạ tầng server mạnh, backup dữ liệu & ghi âm để đảm bảo độ ổn định cao."
+297,MiPBX,Linh hoạt di chuyển,"Ngay cả khi doanh nghiệp đổi văn phòng hoặc di chuyển địa điểm, MiPBX cho phép giữ nguyên đầu số hotline 1900/1800 / Internal number."
+298,MiPBX,Thanh toán & gói dịch vụ,"MiPBX cung cấp các gói dịch vụ theo số lượng máy nhánh/user — phù hợp với doanh nghiệp nhỏ, vừa và lớn."
+299,MiPBX,Đăng ký Demo,MiPBX cho phép doanh nghiệp đăng ký dùng thử miễn phí để trải nghiệm hệ thống trước khi quyết định sử dụng.
+300,MiPBX,Liên hệ hỗ trợ,Hotline hỗ trợ: 1900 1238 — Email liên hệ: contact@mitek.vn — nhanh chóng tư vấn & hỗ trợ dịch vụ.
+301,MiPBX,Tổng quan,MiPBX là giải pháp tổng đài Cloud giúp doanh nghiệp vận hành hệ thống liên lạc ổn định mà không cần đầu tư phần cứng.
+302,MiPBX,Lợi ích,"MiPBX giảm chi phí vận hành nhờ mô hình Cloud, miễn phí cuộc gọi nội bộ giữa các chi nhánh."
+303,MiPBX,Hạ tầng,"MiPBX được triển khai trên cụm máy chủ Cloud đặt tại IDC VNPT và Viettel, bảo đảm tính ổn định cao."
+304,MiPBX,Tính năng,"Hệ thống hỗ trợ ghi âm cuộc gọi lưu trên Server, giúp truy xuất dễ dàng và an toàn."
+305,MiPBX,Kết nối,"MiPBX tương thích với IP Phone, Softphone và ứng dụng di động cho nhân viên bán hàng hoặc CSKH."
+306,MiPBX,Đầu số,Doanh nghiệp có thể tích hợp đa dạng đầu số như 1900/1800 hoặc SIP Trunk từ các nhà mạng lớn.
+307,MiPBX,IVR,MiPBX hỗ trợ IVR đa cấp kết hợp Text-to-Speech để tạo cây menu thoại linh hoạt.
+308,MiPBX,Định tuyến,"Hệ thống hỗ trợ định tuyến cuộc gọi theo thời gian, nhóm xử lý hoặc kỹ năng nhân viên."
+309,MiPBX,Mở rộng,MiPBX có thể mở rộng số lượng máy nhánh không giới hạn dựa trên nhu cầu doanh nghiệp.
+310,MiPBX,Triển khai,"Khách hàng chỉ cần cung cấp danh sách extension, hệ thống sẽ được khởi tạo hoàn chỉnh trong 30 phút."
+311,MiPBX,Bảo mật,"MiPBX sử dụng TLS/SRTP để mã hóa cuộc gọi, bảo vệ thông tin trao đổi của khách hàng."
+312,MiPBX,Cước phí,"MiPBX không tốn chi phí bảo trì tổng đài, doanh nghiệp chỉ chi trả phí thuê bao hàng tháng."
+313,MiPBX,Giám sát,MiPBX hỗ trợ Dashboard real-time hiển thị cuộc gọi đang diễn ra và trạng thái máy nhánh.
+314,MiPBX,Tự động hóa,Hệ thống hỗ trợ Auto-dialer để quay số hàng loạt cho chiến dịch Telesales.
+315,MiPBX,Call Center,MiPBX có cơ chế phân tầng hàng đợi (Queue) dựa trên mức Penalty của từng nhóm Agent.
+316,MiPBX,Cấu hình,Toàn bộ cấu hình tổng đài đều được thực hiện từ xa thông qua giao diện Web quản trị.
+317,MiPBX,SLA,MiPBX đảm bảo thời gian uptime cao nhờ kiến trúc Cloud nhiều lớp backup dữ liệu.
+318,MiPBX,Email thông báo,Tính năng Missed Call to Email giúp gửi thông tin cuộc gọi nhỡ để nhân viên liên hệ lại kịp thời.
+319,MiPBX,Ứng dụng,Ứng dụng Softphone cho phép nhân viên dùng số công ty để gọi ra ở bất kỳ đâu có Internet.
+320,MiPBX,Case Study,Nhiều doanh nghiệp Logistics sử dụng MiPBX vì độ ổn định cao và khả năng mở rộng dễ dàng.
+321,AutoCall,Tổng quan,Auto Call là dịch vụ gọi tự động dựa trên nội dung dựng sẵn hoặc chuyển từ văn bản sang giọng nói AI.
+322,AutoCall,Lợi ích,Auto Call giúp giảm 95% nhân lực tổng đài và tăng 75% hiệu quả tiếp cận khách hàng.
+323,AutoCall,Tính năng,Hệ thống cho phép tương tác phím bấm để khách hàng phản hồi trực tiếp trong cuộc gọi tự động.
+324,AutoCall,Quản lý chiến dịch,Auto Call hỗ trợ quản lý nhiều chiến dịch song song và theo dõi kết quả theo thời gian thực.
+325,AutoCall,Ứng dụng,"Auto Call được dùng trong nhắc lịch hẹn, gia hạn dịch vụ, thông báo vận đơn hoặc thu hồi công nợ."
+326,AutoCall,Import dữ liệu,Nguồn dữ liệu cho chiến dịch có thể nhập từ Excel hoặc tích hợp API realtime.
+327,AutoCall,Báo cáo,"Báo cáo Auto Call ghi nhận số cuộc gọi thành công, thất bại và tỷ lệ nghe máy."
+328,AutoCall,Kịch bản,"Hệ thống hỗ trợ xây dựng kịch bản gọi theo từng bước, tối ưu hóa hành trình khách hàng."
+329,IVR,Chức năng,IVR cho phép phân loại khách hàng tự động qua phím bấm và dẫn đến bộ phận phù hợp.
+330,IVR,Tùy biến,Doanh nghiệp có thể thiết kế IVR nhiều tầng bằng giao diện trực quan.
+331,IVR,Chất lượng,Giọng IVR có thể dùng file thu âm hoặc chuyển giọng nói từ Text-to-Speech.
+332,IVR,Thời gian,Hệ thống hỗ trợ Time Condition để thay đổi luồng IVR theo khung giờ làm việc.
+333,CRM,Tích hợp,MiPBX tích hợp với CRM để hiển thị popup thông tin khách hàng khi có cuộc gọi đến.
+334,CRM,Lợi ích,Tích hợp giúp nhân viên xem lịch sử tương tác và xử lý yêu cầu nhanh hơn.
+335,CRM,Webhook,CRM có thể nhận dữ liệu realtime của cuộc gọi thông qua Webhook do MITEK cung cấp.
+336,CRM,Đồng bộ,Hệ thống đồng bộ trạng thái ticket hoặc lead ngay khi cuộc gọi kết thúc.
+337,Hỗ trợ,Kênh hỗ trợ,"MITEK hỗ trợ qua Email, Zalo, Skype và hotline kỹ thuật ưu tiên."
+338,Hỗ trợ,Triển khai,Khách hàng được hướng dẫn chi tiết cách cấu hình tổng đài và thiết bị.
+339,Hỗ trợ,Bảo trì,Hệ thống được giám sát 24/7 để đảm bảo hoạt động ổn định cho khách hàng.
+340,Bảo mật,Tiêu chuẩn,MITEK đạt chứng chỉ ISO 27001:2013 về bảo mật thông tin.
+341,Bảo mật,Ghi âm,Ghi âm lưu trữ tập trung trên Server và có thể đặt lịch backup định kỳ.
+342,Bảo mật,Mã hóa,Toàn bộ dữ liệu tín hiệu thoại được mã hóa khi truyền qua Internet.
+343,Triển khai,Yêu cầu,"MiPBX chỉ cần Internet ổn định, không yêu cầu đầu tư thiết bị phần cứng."
+344,Triển khai,IP Phone,MITEK cung cấp điện thoại IP Yealink/Grandstream tương thích hoàn toàn.
+345,Triển khai,Hướng dẫn,Khách hàng sẽ nhận tài liệu sử dụng tổng đài và tài liệu API sau khi triển khai.
+346,Case Study,Vận tải,Nhiều doanh nghiệp vận tải dùng MiPBX để tiếp nhận cuộc gọi đặt chỗ số lượng lớn mỗi ngày.
+347,Case Study,Bệnh viện,Bệnh viện sử dụng MiPBX để tối ưu hóa quy trình tổng đài tư vấn khám chữa bệnh.
+348,Case Study,Chung cư,Chung cư sử dụng MiPBX cho bộ phận CSKH và quản lý phản ánh cư dân.
+349,MiPBX,Ổn định,Hệ thống có cơ chế Failover tự động giữa các trung kế nếu có sự cố.
+350,MiPBX,Quản lý,Toàn bộ dữ liệu Log và báo cáo cuộc gọi được lưu trữ để phục vụ phân tích.
+351,MiCXM,Giới thiệu,MiCXM là hệ thống Contact Center – CRM tích hợp đa kênh giúp doanh nghiệp quản lý chăm sóc khách hàng và telesales hiệu quả.
+352,MiCXM,Đa kênh,"MiCXM hợp nhất các kênh Thoại, Live Chat, Email, SMS, Facebook và Social Media trong một nền tảng duy nhất."
+353,MiCXM,Đối tượng sử dụng,"MiCXM phù hợp cho doanh nghiệp trong các ngành: Ngân hàng, Bảo hiểm, Logistics, BPO, Du lịch, Giáo dục, Thương mại, v.v."
+354,MiCXM,Ưu điểm chi phí,"MiCXM có chi phí đầu tư cạnh tranh, giảm gánh nặng bảo trì phần cứng nhờ mô hình đám mây."
+355,MiCXM,Tính năng Inbound,"Hệ thống hỗ trợ ACD — phân phối cuộc gọi tự động tới agent phù hợp, tránh quá tải."
+356,MiCXM,Tính năng IVR,"MiCXM cung cấp IVR cho phép tạo menu thoại tự động, giúp định tuyến khách hàng theo nhu cầu mà không cần agent trực tiếp."
+357,MiCXM,Tính năng CTI,"Hệ thống tích hợp CTI, hỗ trợ pop-up thông tin khách hàng khi có cuộc gọi đến, hiển thị lịch sử tương tác."
+358,MiCXM,Tính năng Omnichannel,"MiCXM hỗ trợ Omni-Channel: inbound từ nhiều kênh, outbound telesales, live chat, email và SMS — quản lý tập trung."
+359,MiCXM,Tính năng Outbound,"Cho phép thực hiện chiến dịch telesales, khảo sát, debt-collection, marketing qua điện thoại hoặc SMS."
+360,MiCXM,Auto-Dialer / PDS,MiCXM cung cấp Auto Dialer / Predictive Dialer System giúp tăng gấp đôi năng suất telesales và giảm thời gian quay số thủ công.
+361,MiCXM,Quản lý chiến dịch,"Hệ thống cho phép quản lý nhiều chiến dịch đồng thời, gán agent, theo dõi trạng thái, báo cáo kết quả cuộc gọi và KPI."
+362,MiCXM,Live Chat & Web Chat,"MiCXM hỗ trợ live chat trên website, cho phép agent chat realtime với khách truy cập và lưu lịch sử chat."
+363,MiCXM,SMS BrandName,"MiCXM tích hợp SMS BrandName để gửi tin nhắn hàng loạt hoặc cá nhân hóa cho khách hàng, tiện cho marketing & CSKH."
+364,MiCXM,Email CSKH,Agent có thể nhận và xử lý email hỗ trợ ngay trong giao diện MiCXM — phù hợp cho CSKH và hỗ trợ kỹ thuật.
+365,MiCXM,Social Media Integration,"MiCXM hỗ trợ kênh Social media (Facebook, các mạng xã hội), hợp nhất inbox/comment để agent dễ quản lý."
+366,MiCXM,Quản lý khách hàng (CRM tích hợp),"MiCXM tích hợp sẵn CRM để lưu trữ thông tin khách hàng — lịch sử tương tác, thông tin cá nhân, leads, hỗ trợ omnichannel."
+367,MiCXM,Click-to-Call,"Khi dữ liệu khách hàng đã có, agent có thể Click số điện thoại trên CRM để gọi trực tiếp từ giao diện — thuận tiện & nhanh chóng."
+368,MiCXM,Case Management,"MiCXM hỗ trợ quản lý vụ việc (case): từ tiếp nhận, xử lý, theo dõi tới hoàn tất — thích hợp cho CSKH, khiếu nại, support kỹ thuật."
+369,MiCXM,SLA & Workflow,"Hệ thống hỗ trợ thiết lập SLA, workflow xử lý case, nhắc nhở quá hạn và báo cáo khiếu nại — giúp đảm bảo chất lượng dịch vụ."
+370,MiCXM,Báo cáo & Giám sát,"MiCXM có chức năng thống kê và giám sát realtime: cuộc gọi đang chờ, agent bận, tổng số cuộc gọi, lịch sử, hiệu suất agent."
+371,MiCXM,Phân quyền & Kỹ năng,"MiCXM cho phép phân quyền agent, phân bố cuộc gọi theo kỹ năng — phù hợp cho tổng đài đa phòng ban."
+372,MiCXM,Import dữ liệu khách hàng,"Hệ thống cho phép import danh sách khách hàng/leads từ Excel hoặc nhận từ API bên ngoài, dễ khởi động chiến dịch."
+373,MiCXM,Quản lý Lead,"MiCXM hỗ trợ quản lý danh sách leads — lọc, phân loại, gắn nhãn, theo dõi trạng thái, tránh trùng lặp."
+374,MiCXM,Dịch vụ BPO / Outsourcing,"Doanh nghiệp có thể dùng MiCXM cho dịch vụ Outsourcing BPO: telesales, thu hồi nợ, chăm sóc khách hàng thuê ngoài."
+375,MiCXM,Ứng dụng trong ngành bảo hiểm,"MiCXM phù hợp ngành bảo hiểm để thực hiện telesales, chăm sóc khách hàng, quản lý khách hàng tiềm năng."
+376,MiCXM,Ứng dụng trong giáo dục & đào tạo,"Giáo dục/đào tạo dùng MiCXM để quản lý cuộc gọi tư vấn, hỗ trợ học viên, thông báo, CSKH qua nhiều kênh."
+377,MiCXM,Ứng dụng Logistics & Vận tải,"Doanh nghiệp logistics dùng MiCXM để chăm sóc khách hàng, hỗ trợ tracking, thông báo vận đơn, CSKH sau bán."
+378,MiCXM,Không cần hạ tầng vật lý,"MiCXM hoạt động trên nền tảng Cloud / Web — doanh nghiệp không cần đầu tư phần cứng riêng, giảm chi phí hạ tầng."
+379,MiCXM,Khởi tạo nhanh,MiCXM có thể được cài đặt và cấu hình nhanh chóng — phù hợp doanh nghiệp cần triển khai gấp.
+380,MiCXM,Chi phí linh hoạt,"Tùy theo nhu cầu — số lượng user, kênh, volume cuộc gọi — chi phí của MiCXM linh hoạt, phù hợp SMEs và enterprise."
+381,MiCXM,Hỗ trợ & Tư vấn,"MiCXM hỗ trợ tư vấn, triển khai, hướng dẫn sử dụng và hỗ trợ kỹ thuật — đảm bảo doanh nghiệp được hỗ trợ đầy đủ."
+382,MiCXM,Độ bảo mật,"MiCXM đảm bảo bảo mật dữ liệu khách hàng, thông tin cuộc gọi và tương tác giữa khách hàng — doanh nghiệp."
+383,MiCXM,Theo dõi lịch sử tương tác,"Mọi tương tác (call, chat, email, sms, social) đều được lưu trữ và dễ truy xuất để phục vụ chăm sóc khách hàng hoặc audit."
+384,MiCXM,Đồng bộ dữ liệu đa kênh,"Thông tin khách hàng đồng bộ giữa các kênh — khi khách hàng tương tác qua chat rồi call, agent vẫn thấy toàn bộ history."
+385,MiCXM,Phù hợp doanh nghiệp đa kênh,"Đặc biệt phù hợp doanh nghiệp cần quản lý khách hàng đa dạng kênh: bán hàng, CSKH, marketing, telesales, hỗ trợ."
+386,MiCXM,Giảm tải cho Agent,"Nhờ Omni-Channel và tự động hóa, agent không cần chuyển đổi nhiều hệ thống — tăng hiệu suất, ít lỗi thao tác."
+387,MiCXM,Mở rộng dễ dàng,"Khi doanh nghiệp mở rộng chi nhánh, tăng user hoặc thêm kênh — MiCXM dễ dàng mở rộng theo nhu cầu."
+388,MiCXM,Quản lý popup khách hàng,"Khi có cuộc gọi đến, MiCXM tự động hiện popup thông tin khách hàng để agent dễ phản hồi và hỗ trợ chính xác."
+389,MiCXM,Quản lý lịch sử contact,"MiCXM lưu lịch sử mọi contact — gọi, chat, email, sms — giúp theo dõi chăm sóc và phân tích hành vi khách hàng."
+390,MiCXM,Giảm chi phí vận hành tổng đài,"Do không cần phần cứng vật lý, doanh nghiệp tiết kiệm chi phí đầu tư, bảo trì, bảo dưỡng tổng đài."
+391,MiCXM,Tối ưu trải nghiệm khách hàng,"MiCXM giúp doanh nghiệp tăng mức độ hài lòng khách hàng nhờ xử lý nhanh, đa kênh, và lịch sử tương tác đầy đủ."
+392,MiCXM,Khả năng tùy chỉnh,"MiCXM có thể tùy chỉnh module theo nghiệp vụ doanh nghiệp: telesales, CSKH, debt collection, hỗ trợ kỹ thuật, v.v."
+393,MiCXM,Backup dữ liệu,"Dữ liệu cuộc gọi, chat, email, sms được lưu trữ và backup đảm bảo không mất dữ liệu khi doanh nghiệp mở rộng hoặc xảy ra sự cố."
+394,MiCXM,Quản lý ticket & case,"MiCXM có module quản lý ticket/ case giúp quản lý yêu cầu, khiếu nại, hỗ trợ khách hàng chuyên nghiệp."
+395,MiCXM,Khả năng tích hợp API,MiCXM cho phép tích hợp API với CRM/ERP hoặc các hệ thống bên ngoài để đồng bộ dữ liệu khách hàng và workflow.
+396,MiCXM,Chuyển đổi linh hoạt giữa kênh,"Agent có thể dễ dàng chuyển đổi tương tác giữa call, chat, email, sms… trên cùng một giao diện, giúp xử lý linh hoạt."
+397,MiCXM,Quản lý nhiều kênh song song,MiCXM hỗ trợ xử lý nhiều kênh song song — phù hợp doanh nghiệp lớn hoặc có nhiều demand khách hàng.
+398,MiCXM,Thiết kế web-based,"MiCXM là hệ thống web-based, agent chỉ cần trình duyệt và Internet để làm việc — dễ triển khai và truy cập từ xa."
+399,MiCXM,Dịch vụ Demo,MiCXM cung cấp demo cho doanh nghiệp thử nghiệm trước khi quyết định sử dụng dịch vụ.
+400,MiCXM,Liên hệ & Hỗ trợ,"Hotline hỗ trợ MiCXM: 1900 1238 – Email: contact@mitek.vn, hỗ trợ tư vấn & triển khai."
+401,MiDesk,Giới thiệu,"MiDesk là phần mềm Omni-Channel Customer Support, hợp nhất tất cả kênh tương tác khách hàng (call, live chat, email, Facebook, Zalo OA, website) về một nền tảng duy nhất."
+402,MiDesk,Đa kênh,"MiDesk hỗ trợ tất cả các kênh: Thoại (Hotline/Call), Live Chat, Email, Facebook, Zalo OA, SMS, Web Callback, Contact Form."
+403,MiDesk,Ticket system,"MiDesk tự động chuyển tất cả tương tác từ các kênh thành Ticket, giúp quản lý yêu cầu khách hàng tập trung, theo dõi & xử lý hiệu quả."
+404,MiDesk,Phân bổ tự động,"MiDesk có cơ chế phân bổ tự động — gán ticket cho agent/phòng ban theo nghiệp vụ hoặc mức độ ưu tiên, giúp xử lý đúng người, đúng việc."
+405,MiDesk,Quản lý CRM tích hợp,"MiDesk tích hợp CRM: lưu trữ thông tin khách hàng, lịch sử tương tác, giúp agent dễ tra cứu và phục vụ khách hàng nhanh chóng."
+406,MiDesk,Realtime Monitoring,"Quản lý/supervisor có thể giám sát realtime các cuộc gọi, tình trạng ticket và luồng xử lý nhằm đảm bảo SLA và chất lượng dịch vụ."
+407,MiDesk,Báo cáo & KPI,"MiDesk cung cấp báo cáo tổng hợp: KPI CSKH, SLA, số lượng ticket, thời gian xử lý, hiệu suất agent, giúp doanh nghiệp theo dõi hiệu quả chăm sóc khách hàng."
+408,MiDesk,Workflow & SLA,"MiDesk hỗ trợ thiết lập workflow xử lý ticket, SLA (thời gian phản hồi/xử lý), nhắc nhở cảnh báo khi ticket quá hạn."
+409,MiDesk,Cộng tác nội bộ,"MiDesk cho phép phối hợp giữa các phòng ban — chia ticket, chuyển xử lý khi cần, đảm bảo thống nhất và nhanh chóng giải quyết yêu cầu."
+410,MiDesk,Omni-Channel Advantage,"So với Multi-channel rời, MiDesk giúp doanh nghiệp tiết kiệm nguồn lực, tránh trùng thông tin, chăm sóc đồng bộ, cải thiện trải nghiệm khách hàng."
+411,MiDesk,Tiện lợi cho doanh nghiệp nhỏ,"MiDesk phù hợp với mọi quy mô: từ Start-up, SMEs đến doanh nghiệp lớn, kể cả khi chỉ bán online hoặc qua social media."
+412,MiDesk,Tiết kiệm chi phí hạ tầng,"Nhờ mô hình SaaS & nền tảng đám mây, MiDesk giúp doanh nghiệp không cần đầu tư phần cứng, giảm chi phí bảo trì và vận hành."
+413,MiDesk,Hỗ trợ nhiều kênh bán & CSKH,"MiDesk giúp hợp nhất bán hàng và CSKH — từ đặt hàng online, support, chăm sóc, CRM — tất cả trong cùng hệ thống."
+414,MiDesk,Quản lý comment & inbox Facebook/Zalo,MiDesk tự động ghi nhận comment/inbox từ Fanpage Facebook hoặc Zalo OA thành ticket để agent xử lý — tránh bỏ sót khách hàng.
+415,MiDesk,Live Chat Website,"MiDesk hỗ trợ Live Chat trên website — khách truy cập có thể chat trực tiếp, agent nhận và phản hồi ngay, thu thập thông tin khách dễ dàng."
+416,MiDesk,Web Callback,Khách hàng có thể để lại thông tin trên website yêu cầu gọi lại; MiDesk tự động tạo ticket & chuyển tới bộ phận hỗ trợ phù hợp.
+417,MiDesk,SMS & Email Support,"MiDesk tích hợp cả SMS/email để chăm sóc khách hàng, gửi thông báo, xác nhận dễ dàng — phù hợp cho CSKH & marketing."
+418,MiDesk,Mobile App,"MiDesk cung cấp ứng dụng trên iOS và Android để agent có thể xử lý ticket, chat, email, cuộc gọi ngay cả khi di động."
+419,MiDesk,Điều chỉnh linh hoạt gói dịch vụ,"MiDesk có nhiều gói dịch vụ khác nhau tùy theo nhu cầu: số lượng user, kênh sử dụng, lưu trữ dữ liệu – phù hợp đa dạng doanh nghiệp."
+420,MiDesk,Miễn phí triển khai ban đầu,Một số gói dịch vụ MiDesk có chính sách miễn phí setup/triển khai — giúp doanh nghiệp dễ tiếp cận.
+421,MiDesk,Hỗ trợ 24/7,"MiDesk hỗ trợ kỹ thuật, tư vấn và xử lý sự cố 24/7, đảm bảo doanh nghiệp luôn sẵn sàng phục vụ khách hàng."
+422,MiDesk,Quản lý lịch sử toàn bộ tương tác,"Mọi tương tác từ kênh call/chat/email/social đều được lưu trữ: thuận tiện tra cứu, hỗ trợ lại khách hàng, audit hoặc phân tích dữ liệu."
+423,MiDesk,Đồng bộ dữ liệu đa kênh,"MiDesk đồng bộ thông tin khách hàng giữa các kênh — khi khách hàng đổi kênh, agent vẫn nhìn thấy toàn bộ lịch sử, giúp phục vụ liền mạch."
+424,MiDesk,Phù hợp ngành đa dạng,"MiDesk phù hợp nhiều ngành: bán lẻ, thương mại điện tử, dịch vụ, nhà hàng – khách sạn, logistics, bảo hành, support sau bán — dùng CSKH & ticket đa kênh."
+425,MiDesk,Quản lý ticket theo trạng thái,"MiDesk hỗ trợ phân loại ticket theo trạng thái: mới, đang xử lý, chờ phản hồi, đã hoàn tất — giúp agent & quản lý dễ theo dõi."
+426,MiDesk,Tag & phân loại ticket,"MiDesk cho phép gắn tag, phân loại ticket theo chủ đề; dễ lọc, phân tích, báo cáo theo yêu cầu hoặc vấn đề khách hàng."
+427,MiDesk,Chuyển tiếp nội bộ ticket,"Nếu một ticket cần chuyển phòng ban — MiDesk hỗ trợ chuyển tiếp nội bộ, giữ lịch sử và trạng thái xử lý rõ ràng."
+428,MiDesk,Template trả lời nhanh,MiDesk hỗ trợ mẫu trả lời nhanh (quick reply / macro) để agent phản hồi các yêu cầu phổ biến — tiết kiệm thời gian & đồng nhất phản hồi.
+429,MiDesk,Hỗ trợ tích hợp API,MiDesk cung cấp API để doanh nghiệp hoặc đối tác tích hợp hệ thống CRM/ERP hoặc các phần mềm khác dễ dàng với MiDesk.
+430,MiDesk,Backup & lưu trữ dữ liệu,"MiDesk hỗ trợ lưu trữ dữ liệu, backup khi cần — đảm bảo lịch sử ticket, cuộc gọi, chat, email không bị mất khi mở rộng."
+431,MiDesk,Dữ liệu & quyền riêng tư,"MiDesk đảm bảo bảo mật dữ liệu khách hàng — thông tin cá nhân, lịch sử tương tác được quản lý chặt chẽ."
+432,MiDesk,Tăng hiệu suất CSKH,"Nhờ hệ thống tập trung & tự động hóa, agent xử lý nhiều kênh dễ dàng — giảm thời gian tìm thông tin, xử lý nhanh, tăng năng suất."
+433,MiDesk,Tối ưu trải nghiệm khách hàng,"Khách hàng được hỗ trợ ngay lập tức qua kênh họ chọn, không cần chuyển tiếp, giúp cải thiện trải nghiệm & độ hài lòng."
+434,MiDesk,Hỗ trợ nhiều chi nhánh,"MiDesk phù hợp với doanh nghiệp nhiều chi nhánh — dữ liệu tập trung, agent từ nhiều nơi vẫn làm việc tập trung & đồng bộ."
+435,MiDesk,Case Study Ngành Dịch vụ,"Nhiều doanh nghiệp dịch vụ (nhà hàng, khách sạn, spa…) chọn MiDesk để chăm sóc khách hàng đa kênh — tối ưu quy trình và trải nghiệm."
+436,MiDesk,Case Study Thương mại điện tử,"MiDesk giúp các shop/website TMĐT quản lý đơn hàng, support trước & sau bán, phản hồi khách hàng nhanh, tăng trust & giữ chân khách."
+437,MiDesk,Đăng ký Demo,MiDesk cho phép doanh nghiệp đăng ký demo miễn phí để thử nghiệm trước khi quyết định sử dụng dịch vụ.
+438,MiDesk,Chi phí linh hoạt,"Chi phí sử dụng MiDesk tùy theo gói: số lượng khách hàng, số kênh, dung lượng lưu trữ — dễ dàng mở rộng khi doanh nghiệp phát triển."
+439,MiDesk,Hợp đồng linh động,Doanh nghiệp có thể đăng ký theo tháng hoặc năm — phù hợp nhu cầu ngắn hạn hoặc dài hạn.
+440,MiDesk,Liên hệ hỗ trợ,Hotline hỗ trợ: 1900 1238 – Phone: 0287 777 0888 – Email: contact@midesk.vn
+441,MiDesk,Thời gian phản hồi dịch vụ,MiDesk cam kết xử lý yêu cầu & hỗ trợ kỹ thuật kịp thời để doanh nghiệp không bị gián đoạn dịch vụ.
+442,MiDesk,Tích hợp với hạ tầng hiện có,"MiDesk dễ tích hợp với website, CRM hoặc ERP sẵn có của doanh nghiệp thông qua API."
+443,MiDesk,Thích hợp start-up & SMEs,"Ngay cả doanh nghiệp nhỏ, start-up với nguồn lực hạn chế vẫn có thể sử dụng MiDesk để quản lý khách hàng chuyên nghiệp."
+444,MiDesk,Quy mô mở rộng dễ dàng,"Khi doanh nghiệp phát triển — tăng user, thêm kênh, mở rộng chi nhánh — MiDesk dễ nâng cấp & mở rộng chức năng."
+445,MiDesk,Dữ liệu thống nhất,"Tất cả dữ liệu liên quan khách hàng & tương tác được lưu trong một hệ thống duy nhất — tránh phân mảnh, quản lý dễ."
+446,MiDesk,Phản hồi linh hoạt,"Agent có thể tiếp nhận mọi tương tác từ nhiều kênh ngay lập tức — chat, call, email — giúp phản hồi nhanh & đúng kênh khách chọn."
+447,MiDesk,Tối ưu quản lý ticket,"MiDesk giúp doanh nghiệp tránh bỏ sót yêu cầu, giảm lỗi xử lý, đảm bảo quy trình rõ ràng từ tiếp nhận → xử lý → hoàn tất."
+448,MiDesk,Cải thiện dịch vụ sau bán,"MiDesk không chỉ dùng cho bán hàng mà còn hỗ trợ CSKH, bảo hành, khiếu nại, feedback, xây dựng lòng trung thành khách hàng."
+449,MiDesk,Trải nghiệm khách hàng tốt hơn,"Với MiDesk, khách hàng được hỗ trợ toàn diện, nhất quán, không phụ thuộc kênh — nâng cao uy tín & hình ảnh thương hiệu doanh nghiệp."
+450,MiDesk,Giá trị dài hạn,"MiDesk giúp doanh nghiệp xây dựng hệ thống CSKH chuyên nghiệp, dữ liệu khách hàng tập trung, dễ phân tích & tái sử dụng — nền tảng cho CRM & marketing sau này."
+451,MiSMS,Giới thiệu,"MiSMS là dịch vụ SMS Brandname & ZNS giúp doanh nghiệp gửi tin nhắn quảng cáo, chăm sóc khách hàng và thông báo đến khách hàng trên điện thoại."
+452,MiSMS,Loại dịch vụ,"SMS Brandname — tin nhắn hiển thị tên thương hiệu thay vì số điện thoại thông thường, tăng độ nhận diện cho doanh nghiệp."
+453,MiSMS,Loại dịch vụ,"Zalo Notification Service (ZNS) — gửi thông báo đến người dùng qua Zalo OA, phù hợp cho CSKH và marketing."
+454,MiSMS,Đối tượng sử dụng,"Doanh nghiệp vừa & nhỏ, cửa hàng, thương mại, dịch vụ — những đơn vị cần gửi tin nhắn hàng loạt để quảng cáo, CSKH, chăm sóc khách hàng hoặc xác thực."
+455,MiSMS,Tính năng Gửi tin nhắn QC,"Cho phép gửi SMS quảng cáo tới khách hàng với tiêu đề hiển thị thương hiệu (Brandname) — phù hợp cho marketing, khuyến mãi, thông báo sản phẩm/dịch vụ mới."
+456,MiSMS,Tính năng CSKH,"Hỗ trợ gửi SMS chăm sóc khách hàng: thông báo đơn hàng, mã kích hoạt, nhắc lịch, chúc mừng sinh nhật — dễ dàng sử dụng mà không cần phần cứng riêng."
+457,MiSMS,Tính năng 2-chiều,"MiSMS hỗ trợ tin nhắn 2 chiều — khách hàng có thể phản hồi lại SMS và doanh nghiệp có thể nhận lại, thuận tiện cho khảo sát, phản hồi khách hàng."
+458,MiSMS,Tính năng API,"MiSMS cung cấp API để tích hợp với website, phần mềm/CRM hiện có — giúp doanh nghiệp dễ dàng tự động hóa gửi SMS từ hệ thống của mình."
+459,MiSMS,Tính năng SMS thoại,MiSMS hỗ trợ gửi tin nhắn thoại (voice-SMS / voice call) thay thế SMS thông thường — phù hợp khi cần thông báo quan trọng hoặc xác thực khách hàng.
+460,MiSMS,Lợi ích – độ mở cao,SMS Brandname của MiSMS có tỉ lệ người nhận mở tin nhắn cao — giúp doanh nghiệp tiếp cận khách hàng hiệu quả hơn so với nhiều kênh khác.
+461,MiSMS,Lợi ích – tiết kiệm thời gian,"Dịch vụ giúp doanh nghiệp gửi tin nhắn hàng loạt nhanh chóng, giảm thời gian & công sức so với gọi điện hoặc gửi email thủ công."
+462,MiSMS,Lợi ích – không cần hạ tầng,"Vì MiSMS chạy hoàn toàn qua nền tảng Cloud / SaaS, doanh nghiệp không cần đầu tư phần cứng riêng, ít chi phí vận hành."
+463,MiSMS,Lợi ích – linh hoạt,"Dịch vụ phù hợp cho đa dạng ngành nghề: thương mại, giáo dục, dịch vụ, bảo hiểm, logistics, v.v., dễ tùy chỉnh theo nhu cầu gửi tin nhắn, SMS marketing."
+464,MiSMS,Quy định Brandname,"Tên thương hiệu (Brandname) hiển thị trên SMS có độ dài từ 3–11 ký tự; không được chứa ký tự đặc biệt như #, %, [, ], {, }, <, >, \\, @ để đảm bảo hiển thị đúng trên điện thoại."
+465,MiSMS,Quy định nội dung SMS QC,"Nội dung quảng cáo SMS thường giới hạn 122 ký tự cho SMS đầu tiên, 160 ký tự cho các SMS tiếp theo; ký tự đặc biệt tính 2 ký tự."
+466,MiSMS,Quy định thời gian gửi SMS QC,SMS quảng cáo nên gửi trước 16:30 ngày làm việc (Thứ 2–Thứ 6). Nếu muốn gửi vào thứ 7/Chủ nhật — cần gửi trước 16:30 thứ 6 để đảm bảo đúng quy định.
+467,MiSMS,Chính sách kiểm duyệt,SMS quảng cáo gửi qua Brandname cần được duyệt nội dung bởi nhà mạng — thời gian duyệt 2–3 giờ trước khi SMS được gửi đi.
+468,MiSMS,Quy định CSKH,Tin nhắn chăm sóc khách hàng (không QC) không cần duyệt nội dung — doanh nghiệp có thể gửi bất cứ lúc nào sau khi nạp tiền/sử dụng dịch vụ.
+469,MiSMS,Nhà mạng hỗ trợ,"MiSMS hỗ trợ gửi Brandname đến các thuê bao mạng lớn tại Việt Nam như Viettel, Mobifone và Vinaphone."
+470,MiSMS,Danh mục dịch vụ,"MiSMS cung cấp các dạng tin nhắn: Quảng cáo, chăm sóc khách hàng, 2-chiều, SMS thoại, SMS API để doanh nghiệp lựa chọn phù hợp nhu cầu."
+471,MiSMS,Hướng dẫn sử dụng,"MiSMS cung cấp tài liệu hướng dẫn đăng ký và sử dụng dịch vụ gửi SMS, Brandname và ZNS — giúp doanh nghiệp dễ dàng khởi tạo chiến dịch."
+472,MiSMS,Chi phí & thanh toán,"Doanh nghiệp cần thanh toán phí duy trì Brandname, phí dịch vụ hàng tháng và chi phí theo số lượng SMS gửi — nạp tiền trước hoặc theo gói tùy chọn."
+473,MiSMS,Quy trình đăng ký,"Để sử dụng SMS Brandname, doanh nghiệp cần cung cấp thông tin doanh nghiệp — sau khi xác nhận, MiSMS sẽ duyệt brandname trước khi gửi tin nhắn QC."
+474,MiSMS,Hỗ trợ khách hàng,"MiSMS hỗ trợ hỗ trợ tư vấn & kỹ thuật 24/7 — khách hàng có thể liên hệ Hotline 1900 1238 hoặc email contact@mitek.vn để được trợ giúp."""
+475,MiSMS,Cam kết chất lượng,"MiSMS cam kết hệ thống ổn định, gửi tin nhắn chính xác, không lỗi, giúp doanh nghiệp yên tâm sử dụng cho CSKH & marketing."
+476,MiSMS,Tăng nhận diện thương hiệu,Việc tin nhắn hiển thị brandname giúp khách hàng dễ nhận biết doanh nghiệp — tăng độ chuyên nghiệp & uy tín thương hiệu.
+477,MiSMS,Tối ưu marketing & CSKH,"Kết hợp SMS + ZNS giúp doanh nghiệp dễ tiếp cận khách hàng, thông báo nhanh, chăm sóc và giữ chân khách hàng hiệu quả hơn."
+478,MiSMS,Dễ mở rộng,"Khi doanh nghiệp phát triển, MiSMS dễ mở rộng quy mô gửi tin, số lượng số điện thoại, module SMS/ZNS theo nhu cầu mà không cần đầu tư lại hạ tầng."
+479,MiSMS,Tích hợp hệ sinh thái MITEK,"MiSMS là một phần của hệ sinh thái giải pháp của MITEK J.S.C — dễ tích hợp với MiPBX, MiCXM, MiDesk, giúp doanh nghiệp quản lý toàn diện."
+480,MiSMS,Giá trị lâu dài,MiSMS giúp doanh nghiệp xây dựng kênh chăm sóc & marketing linh hoạt liên tục — phù hợp cho kế hoạch dài hạn và phát triển thương hiệu.

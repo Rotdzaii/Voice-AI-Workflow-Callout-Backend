@@ -5,9 +5,13 @@ from __future__ import annotations
 import os
 from typing import Optional
 from dotenv import load_dotenv, dotenv_values
+import pathlib
 
-# Load .env from project root when this module is imported
-loaded = load_dotenv()
+# Load .env from project root explicitly when this module is imported
+_here = pathlib.Path(__file__).resolve()
+_root = _here.parent.parent
+_env_path = _root / ".env"
+loaded = load_dotenv(dotenv_path=str(_env_path))
 
 
 def env_str(key: str, default: Optional[str] = None) -> Optional[str]:

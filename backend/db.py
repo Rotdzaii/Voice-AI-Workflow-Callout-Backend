@@ -1,7 +1,8 @@
 import asyncio
 import asyncpg
 from typing import Optional
-from .config import DATABASE_URL
+import os
+from .config import DATABASE_URL as CFG_DATABASE_URL
 
 _pool: Optional[asyncpg.Pool] = None
 _pool_loop: Optional[asyncio.AbstractEventLoop] = None
@@ -30,7 +31,11 @@ async def get_pool() -> asyncpg.Pool:
                 await _pool.close()
             except Exception:
                 pass
-        _pool = await asyncpg.create_pool(DATABASE_URL, min_size=1, max_size=10)
+        # Resolve DATABASE_URL robustly
+        dsn = CFG_DATABASE_URL or os.environ.get("DATABASE_URL")
+        if not dsn:
+            raise RuntimeError("DATABASE_URL is not set")
+        _pool = await asyncpg.create_pool(dsn, min_size=1, max_size=10)
         _pool_loop = current_loop
     return _pool
 

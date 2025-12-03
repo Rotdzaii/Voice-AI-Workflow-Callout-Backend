@@ -7,3 +7,10 @@ httpx
 pytest
 passlib
 python-jose
+prometheus_client
+langchain-community
+langchain-huggingface
+chromadb
+sentence-transformers
+google-generativeai
+google-cloud-texttospeech
