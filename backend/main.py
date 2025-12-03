@@ -20,7 +20,6 @@ from .deeppavlov_client import get_agent
 from .logging_setup import calls_started, conversation_logs_inserted, get_registry, stt_requests
 from .models import CallReplyIn, CallStartIn, ConversationAgentIn, ConversationIn, ConversationOut, NLUParseIn, NLUParseOut
 from .nlu import get_nlu
-from .routers import workflows as workflows_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -87,8 +86,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-app.include_router(workflows_router.router)
 
 
 @app.get("/health")
