@@ -2,7 +2,6 @@ import asyncio
 import json
 import os
 import secrets
-import socket
 from contextlib import asynccontextmanager
 
 from fastapi import Body, Depends, FastAPI, File, HTTPException, Request, Response, UploadFile, WebSocket, WebSocketDisconnect, status
@@ -13,7 +12,6 @@ from starlette.responses import HTMLResponse, JSONResponse, RedirectResponse
 
 from . import auth, db, models, oauth, rag_api, supabase_client
 from .asterisk import originate
-from .config import DATABASE_URL as CFG_DATABASE_URL
 from .config import USE_SUPABASE_SDK, env_str
 from .conversation import process_turn
 from .deeppavlov_client import get_agent
@@ -23,26 +21,26 @@ from .nlu import get_nlu
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    """Application lifespan: startup and shutdown handlers."""
     # Startup
     try:
         await db.get_pool()
     except Exception:
-        # Keep app running even if DB is not reachable at boot
-        pass
-    # Startup: avoid background RAG init to keep startup clean; rely on lazy init in /rag
-    try:
-        if os.environ.get("RAG_EAGER_INIT", "0") == "1":
+        pass  # Keep app running even if DB is not reachable at boot
+    
+    # Optional eager RAG initialization
+    if os.environ.get("RAG_EAGER_INIT", "0") == "1":
+        try:
+            rag_api._ensure_rag()
+        except Exception as e:
             try:
-                rag_api._ensure_rag()
-            except Exception as e:
-                try:
-                    import logging
-                    logging.getLogger("uvicorn").exception(f"Eager RAG init failed: {e}")
-                except Exception:
-                    pass
-    except Exception:
-        pass
+                import logging
+                logging.getLogger("uvicorn").exception(f"Eager RAG init failed: {e}")
+            except Exception:
+                pass
+    
     yield
+    
     # Shutdown
     try:
         await db.close_pool()
@@ -101,63 +99,6 @@ async def chat_test():
             return HTMLResponse(content=f.read())
     except Exception:
         return HTMLResponse(content="<h1>Chat test not found</h1>", status_code=404)
-
-
-@app.get("/debug/db_ping")
-async def db_ping():
-    """Attempt a simple DB query to verify connectivity. Returns 200 with ok=false on failure."""
-    try:
-        pool = await db.get_pool()
-        async with pool.acquire() as conn:
-            val = await conn.fetchval("SELECT 1")
-        return {"ok": True, "result": val}
-    except Exception as e:
-        # Avoid leaking internals; return minimal info
-        return {"ok": False, "error": str(e)}
-
-
-@app.get("/debug/env")
-async def debug_env():
-    """Return key environment values for debugging (non-secret)."""
-    try:
-        return {
-            "database_url_present": bool(CFG_DATABASE_URL),
-            "database_url": CFG_DATABASE_URL,
-        }
-    except Exception as e:
-        return {"error": str(e)}
-
-
-@app.get("/debug/resolve")
-async def debug_resolve():
-    """Try DNS resolution for the host in DATABASE_URL to diagnose getaddrinfo errors."""
-    try:
-        if not CFG_DATABASE_URL:
-            return {"ok": False, "error": "DATABASE_URL not set"}
-        host = None
-        try:
-            from urllib.parse import urlparse
-            parsed = urlparse(CFG_DATABASE_URL)
-            host = parsed.hostname
-            port = parsed.port or 5432
-        except Exception:
-            # Fallback: naive split
-            host = CFG_DATABASE_URL.split("@")[1].split(":")[0]
-            port = 5432
-        infos = socket.getaddrinfo(host, port)
-        addrs = [
-            {
-                "family": str(info[0]),
-                "type": str(info[1]),
-                "proto": str(info[2]),
-                "canonname": info[3],
-                "sockaddr": info[4],
-            }
-            for info in infos
-        ]
-        return {"ok": True, "host": host, "port": port, "results": addrs}
-    except Exception as e:
-        return {"ok": False, "error": str(e)}
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")
@@ -416,69 +357,6 @@ async def sso_login(body: models.SSOIn):
         except Exception:
             pass
         raise HTTPException(status_code=500, detail="Internal server error while processing SSO login")
-
-
-@app.post("/workflows", response_model=models.WorkflowOut)
-async def create_workflow(w: models.WorkflowCreate, user=Depends(get_current_user)):
-    pool = await db.get_pool()
-    async with pool.acquire() as conn:
-        wf_json = json.dumps(w.workflow_json) if isinstance(w.workflow_json, (dict, list)) else w.workflow_json
-        row = await conn.fetchrow(
-            "INSERT INTO workflows (user_id, name, description, workflow_json) VALUES ($1,$2,$3,$4::jsonb) RETURNING id, user_id, name, description, status",
-            user["id"], w.name, w.description, wf_json,
-        )
-        return {"id": str(row["id"]), "user_id": str(row["user_id"]), "name": row["name"], "description": row["description"], "status": row["status"]}
-
-
-@app.get("/workflows")
-async def list_workflows(user=Depends(get_current_user)):
-    pool = await db.get_pool()
-    async with pool.acquire() as conn:
-        rows = await conn.fetch("SELECT id, user_id, name, description, status FROM workflows WHERE user_id=$1", user["id"])
-    return [{"id": str(r["id"]), "user_id": str(r["user_id"]), "name": r["name"], "description": r["description"], "status": r["status"]} for r in rows]
-@app.get("/workflows/{workflow_id}", response_model=models.WorkflowOut)
-async def get_workflow(workflow_id: str, user=Depends(get_current_user)):
-    pool = await db.get_pool()
-    async with pool.acquire() as conn:
-        row = await conn.fetchrow("SELECT id, user_id, name, description, status FROM workflows WHERE id=$1", workflow_id)
-    if not row:
-        raise HTTPException(status_code=404, detail="Workflow not found")
-    return {"id": str(row["id"]), "user_id": str(row["user_id"]), "name": row["name"], "description": row["description"], "status": row["status"]}
-
-
-@app.put("/workflows/{workflow_id}", response_model=models.WorkflowOut)
-async def update_workflow(workflow_id: str, patch: dict, user=Depends(get_current_user)):
-    updates = []
-    values = []
-    idx = 1
-    for field in ["name", "description", "status", "workflow_json"]:
-        if field in patch and patch[field] is not None:
-            if field == "workflow_json":
-                updates.append(f"{field}=${idx}::jsonb")
-                jval = json.dumps(patch[field]) if isinstance(patch[field], (dict, list)) else patch[field]
-                values.append(jval)
-            else:
-                updates.append(f"{field}=${idx}")
-                values.append(patch[field])
-            idx += 1
-    if not updates:
-        raise HTTPException(status_code=400, detail="No updates provided")
-    sql = f"UPDATE workflows SET {', '.join(updates)} WHERE id=${idx} RETURNING id, user_id, name, description, status"
-    values.append(workflow_id)
-    pool = await db.get_pool()
-    async with pool.acquire() as conn:
-        row = await conn.fetchrow(sql, *values)
-    if not row:
-        raise HTTPException(status_code=404, detail="Workflow not found")
-    return {"id": str(row["id"]), "user_id": str(row["user_id"]), "name": row["name"], "description": row["description"], "status": row["status"]}
-
-
-@app.delete("/workflows/{workflow_id}")
-async def delete_workflow(workflow_id: str, user=Depends(get_current_user)):
-    pool = await db.get_pool()
-    async with pool.acquire() as conn:
-        result = await conn.execute("DELETE FROM workflows WHERE id=$1", workflow_id)
-    return {"deleted": True, "result": result}
 
 
 @app.post("/call/start")
