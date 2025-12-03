@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 from fastapi import FastAPI, Depends, HTTPException, status, WebSocket, WebSocketDisconnect, Body, UploadFile, File, Response
+=======
+from fastapi import FastAPI, Depends, HTTPException, status, WebSocket, WebSocketDisconnect, Body, Request
+>>>>>>> 1cabb92688fdc88d5189df0136dceb69fe1bc0e0
 from contextlib import asynccontextmanager
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from . import auth, db, models
@@ -11,6 +15,7 @@ from .conversation import process_turn
 from .asterisk import originate
 from .models import NLUParseIn, NLUParseOut, ConversationIn, ConversationOut, CallStartIn, CallReplyIn, ConversationAgentIn
 from fastapi.middleware.cors import CORSMiddleware
+<<<<<<< HEAD
 from .config import env_str
 import os
 from .logging_setup import configure_logging, get_registry, calls_started, conversation_logs_inserted, stt_requests, tts_requests
@@ -28,6 +33,14 @@ except Exception:
 
 configure_logging()
 
+=======
+from .deeppavlov_client import get_agent
+from starlette.responses import RedirectResponse, HTMLResponse, JSONResponse
+from urllib.parse import urlencode
+from . import oauth
+import socket
+from .config import DATABASE_URL as CFG_DATABASE_URL
+>>>>>>> 1cabb92688fdc88d5189df0136dceb69fe1bc0e0
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -60,15 +73,24 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="VoiceAI - Backend (MVP)", lifespan=lifespan)
 
+<<<<<<< HEAD
 # Register RAG router
 app.include_router(rag_api.router, prefix="/rag")
 
 # Enable CORS for frontend integration
 allowed_origins = env_str("ALLOWED_ORIGINS", "*")
 origins = [o.strip() for o in allowed_origins.split(",") if o.strip()]
+=======
+# Enable CORS for frontend integration (local dev + permissive fallback)
+allowed_origins = [
+    "http://localhost:5173",  # primary Vite dev server
+    "http://localhost:3000",  # fallback dev host
+]
+>>>>>>> 1cabb92688fdc88d5189df0136dceb69fe1bc0e0
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=allowed_origins,
+    allow_origin_regex=".*",  # allow all origins when deployed (e.g., Render)
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -90,6 +112,50 @@ async def db_ping():
         return {"ok": True, "result": val}
     except Exception as e:
         # Avoid leaking internals; return minimal info
+        return {"ok": False, "error": str(e)}
+
+
+@app.get("/debug/env")
+async def debug_env():
+    """Return key environment values for debugging (non-secret)."""
+    try:
+        return {
+            "database_url_present": bool(CFG_DATABASE_URL),
+            "database_url": CFG_DATABASE_URL,
+        }
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@app.get("/debug/resolve")
+async def debug_resolve():
+    """Try DNS resolution for the host in DATABASE_URL to diagnose getaddrinfo errors."""
+    try:
+        if not CFG_DATABASE_URL:
+            return {"ok": False, "error": "DATABASE_URL not set"}
+        host = None
+        try:
+            from urllib.parse import urlparse
+            parsed = urlparse(CFG_DATABASE_URL)
+            host = parsed.hostname
+            port = parsed.port or 5432
+        except Exception:
+            # Fallback: naive split
+            host = CFG_DATABASE_URL.split("@")[1].split(":")[0]
+            port = 5432
+        infos = socket.getaddrinfo(host, port)
+        addrs = [
+            {
+                "family": str(info[0]),
+                "type": str(info[1]),
+                "proto": str(info[2]),
+                "canonname": info[3],
+                "sockaddr": info[4],
+            }
+            for info in infos
+        ]
+        return {"ok": True, "host": host, "port": port, "results": addrs}
+    except Exception as e:
         return {"ok": False, "error": str(e)}
 
 
@@ -121,6 +187,106 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
         if not row:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
         return {"id": str(row["id"]), "email": row["email"], "role": row["role"]}
+
+
+# -------------------- OAuth: Google --------------------
+
+@app.get("/auth/oauth/google/start")
+async def oauth_google_start():
+    try:
+        url, state, nonce, code_verifier = oauth.google_auth_url()
+        resp = RedirectResponse(url)
+        oauth.set_state_cookie(resp, state)
+        oauth.set_nonce_cookie(resp, nonce)
+        oauth.set_code_verifier_cookie(resp, code_verifier)
+        return resp
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=503)
+
+
+@app.get("/auth/oauth/google/callback")
+async def oauth_google_callback(request: Request, code: str | None = None, state: str | None = None, nonce: str | None = None, web_nonce: str | None = None):
+    if not code or not oauth.verify_state(state, "google"):
+        return HTMLResponse(_callback_html_error("google", "missing code/state"), status_code=400)
+    # Verify cookies binding
+    state_cookie = request.cookies.get(oauth.STATE_COOKIE_NAME)
+    nonce_cookie = request.cookies.get(oauth.NONCE_COOKIE_NAME)
+    if not oauth.verify_cookies(state_cookie, nonce_cookie, state, nonce):
+        return HTMLResponse(_callback_html_error("google", "failed cookie/state binding"), status_code=400)
+    code_verifier_signed = request.cookies.get(oauth.CODE_VERIFIER_COOKIE_NAME)
+    code_verifier = oauth.extract_signed_code_verifier(code_verifier_signed)
+    try:
+        token_payload = await oauth.google_exchange_code(code, code_verifier)
+        access_token = token_payload.get("access_token")
+        if not access_token:
+            raise RuntimeError("no access_token from Google")
+        profile = await oauth.google_userinfo(access_token)
+        email = profile.get("email")
+        if not email:
+            raise RuntimeError("no email from Google userinfo")
+        pool = await db.get_pool()
+        async with pool.acquire() as conn:
+            uid, role = await oauth.get_or_create_account_by_email(conn, email)
+        app_token = auth.create_access_token({
+            "sub": uid,
+            "email": email,
+            "role": role or "user",
+            "provider": "google",
+            "name": profile.get("name"),
+            "picture": profile.get("picture"),
+        })
+        # Optional: ensure web_nonce (from frontend) matches provider nonce
+        if web_nonce and nonce and web_nonce != nonce:
+            return HTMLResponse(_callback_html_error("google", "web_nonce mismatch"), status_code=400)
+        return HTMLResponse(_callback_html_success("google", app_token, web_nonce))
+    except Exception as e:
+        return HTMLResponse(_callback_html_error("google", str(e)), status_code=500)
+
+
+# -------------------- OAuth: GitHub --------------------
+
+@app.get("/auth/oauth/github/start")
+async def oauth_github_start():
+    try:
+        url, state = oauth.github_auth_url()
+        resp = RedirectResponse(url)
+        oauth.set_state_cookie(resp, state)
+        return resp
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=503)
+
+
+@app.get("/auth/oauth/github/callback")
+async def oauth_github_callback(request: Request, code: str | None = None, state: str | None = None, web_nonce: str | None = None):
+    if not code or not oauth.verify_state(state, "github"):
+        return HTMLResponse(_callback_html_error("github", "missing code/state"), status_code=400)
+    # Verify cookie binding
+    state_cookie = request.cookies.get(oauth.STATE_COOKIE_NAME)
+    if not oauth.verify_cookies(state_cookie, None, state, None):
+        return HTMLResponse(_callback_html_error("github", "failed cookie/state binding"), status_code=400)
+    try:
+        token_payload = await oauth.github_exchange_code(code)
+        access_token = token_payload.get("access_token")
+        if not access_token:
+            raise RuntimeError("no access_token from GitHub")
+        profile = await oauth.github_userinfo(access_token)
+        email = profile.get("email")
+        if not email:
+            raise RuntimeError("no email from GitHub userinfo")
+        pool = await db.get_pool()
+        async with pool.acquire() as conn:
+            uid, role = await oauth.get_or_create_account_by_email(conn, email)
+        app_token = auth.create_access_token({
+            "sub": uid,
+            "email": email,
+            "role": role or "user",
+            "provider": "github",
+            "name": profile.get("name") or profile.get("login"),
+            "picture": profile.get("avatar_url"),
+        })
+        return HTMLResponse(_callback_html_success("github", app_token, web_nonce))
+    except Exception as e:
+        return HTMLResponse(_callback_html_error("github", str(e)), status_code=500)
 
 
 @app.post("/auth/register", response_model=models.UserOut)
@@ -474,6 +640,45 @@ async def list_intents():
         }
         for r in rows
     ]
+
+
+# --------------- Helper HTML for popup callback ---------------
+
+def _callback_html_success(provider: str, token: str, web_nonce: str | None = None) -> str:
+        from string import Template
+        tmpl = Template("""<!doctype html>
+<html><head><meta charset='utf-8'><title>Login Success</title></head>
+<body>
+<script>
+    try {
+        if (window.opener) {
+            window.opener.postMessage({"type":"oauth","provider":"$provider","ok":true,"token":"$token","web_nonce":"$web_nonce"}, "*");
+        }
+    } catch (e) {}
+    window.close();
+    document.body.innerText = 'You can close this window.';
+</script>
+</body></html>""")
+        return tmpl.substitute(provider=provider, token=token, web_nonce=web_nonce or "")
+
+
+def _callback_html_error(provider: str, message: str) -> str:
+        from string import Template
+        from html import escape
+        msg = escape(message or "unknown error")
+        tmpl = Template("""<!doctype html>
+<html><head><meta charset='utf-8'><title>Login Error</title></head>
+<body>
+<script>
+    try {
+        if (window.opener) {
+            window.opener.postMessage({"type":"oauth","provider":"$provider","ok":false,"error":"$msg"}, "*");
+        }
+    } catch (e) {}
+    document.body.innerText = 'OAuth failed: $msg';
+</script>
+</body></html>""")
+        return tmpl.substitute(provider=provider, msg=msg)
 
 
 @app.get("/entities")

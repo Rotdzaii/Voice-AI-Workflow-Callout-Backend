@@ -41,3 +41,17 @@ USE_SUPABASE_SDK = env_str("SUPABASE_USE_SDK", "false").lower() in {"1", "true",
 # NLU & Conversation
 NLU_ENGINE = env_str("NLU_ENGINE", "simple")  # simple | phobert
 DEEPPAVLOV_URL = env_str("DEEPPAVLOV_URL")
+
+# Dev helpers
+DEV_AUTH_ALLOW_NO_DB = env_str("DEV_AUTH_ALLOW_NO_DB", "false").lower() in {"1", "true", "yes"}
+
+# OAuth security settings
+SECRET_KEY = env_str("SECRET_KEY") or os.getenv("JWT_SECRET") or "dev-secret-change-me"
+STATE_COOKIE_NAME = "oauth_state"
+NONCE_COOKIE_NAME = "oauth_nonce"
+COOKIE_MAX_AGE_SECONDS = int(env_int("OAUTH_COOKIE_MAX_AGE", 600) or 600)
+CODE_VERIFIER_COOKIE_NAME = "oauth_code_verifier"
+JWT_ISSUER = env_str("JWT_ISSUER", "voiceai-backend")
+JWT_AUDIENCE = env_str("JWT_AUDIENCE", "voiceai-frontend")
+ACCESS_TOKEN_TTL_SECONDS = env_int("ACCESS_TOKEN_TTL_SECONDS", 3600)  # 1h default
+JWT_KEY_ID = env_str("JWT_KEY_ID", "primary")
