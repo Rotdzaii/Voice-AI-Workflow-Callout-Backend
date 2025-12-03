@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Depends, HTTPException, status, WebSocket, WebSocketDisconnect, Body, UploadFile, File, Response
+from fastapi.responses import HTMLResponse
 from contextlib import asynccontextmanager
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from . import auth, db, models
@@ -78,6 +79,16 @@ app.add_middleware(
 @app.get("/health")
 async def health():
     return {"status": "ok"}
+
+
+@app.get("/chat", response_class=HTMLResponse)
+async def chat_test():
+    """Serve simple chat test UI"""
+    try:
+        with open("frontend/chat_test.html", "r", encoding="utf-8") as f:
+            return HTMLResponse(content=f.read())
+    except Exception:
+        return HTMLResponse(content="<h1>Chat test not found</h1>", status_code=404)
 
 
 @app.get("/debug/db_ping")
