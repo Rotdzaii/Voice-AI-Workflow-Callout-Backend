@@ -1,0 +1,11 @@
+# ---- FIX PROTOBUF + PYDANTIC (BẮT BUỘC) ----
+pip install -q protobuf==4.25.3
+pip install -q pydantic==1.10.13
+
+# NOTE: This file was intentionally cleared.
+# Original content removed because it was redundant.
+pip install -q langchain-community langchain-huggingface langchain-core
+pip install -q chromadb==0.5.3
+pip install -q sentence-transformers
+pip install -q google-generativeai
+pip install -q pandas requests

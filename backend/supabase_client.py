@@ -60,6 +60,15 @@ def rest_insert_conversation_log(call_id: str, speaker: str, text: str, intent: 
     return res.data
 
 
+def rest_update_call_recording(call_id: str, recording_url: str):
+    client = get_client()
+    if not client:
+        raise RuntimeError("Supabase client not configured")
+    payload = {"recording_url": recording_url}
+    res = client.table("calls").update(payload).eq("id", call_id).execute()
+    return res.data
+
+
 # ---------- Realtime helpers ----------
 
 class RealtimeSubscription:

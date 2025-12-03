@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>VoiceAI MITEK - Chat Test</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 24px; background: #f7f7f9; }
+    h1 { font-size: 20px; }
+    .card { background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 16px; max-width: 800px; }
+    .row { display: flex; gap: 8px; margin-top: 8px; }
+    input[type="text"] { flex: 1; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; }
+    button { padding: 10px 14px; border: none; border-radius: 8px; background: #2563eb; color: #fff; cursor: pointer; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .meta { font-size: 12px; color: #6b7280; margin-top: 6px; }
+    .answer { white-space: pre-wrap; margin-top: 12px; }
+    .sources { font-size: 12px; color: #374151; margin-top: 8px; }
+    audio { margin-top: 12px; width: 100%; }
+    .timing { margin-top: 12px; font-size: 13px; }
+    .error { color: #b91c1c; margin-top: 8px; }
+  </style>
+</head>
+<body>
+  <h1>VoiceAI MITEK - Chatbot Test (RAG + TTS)</h1>
+  <div class="card">
+    <label for="question">Câu hỏi</label>
+    <div class="row">
+      <input id="question" type="text" placeholder="Nhập câu hỏi..." />
+      <button id="askBtn">Hỏi</button>
+    </div>
+    <div class="meta">Server: http://127.0.0.1:8000</div>
+
+    <div id="status" class="meta">Trạng thái: chưa kiểm tra</div>
+    <div id="error" class="error"></div>
+
+    <div class="timing" id="timing">⏱ Thời gian: —</div>
+
+    <div class="answer" id="answer"></div>
+    <div class="sources" id="sources"></div>
+
+    <audio id="audio" controls></audio>
+  </div>
+
+  <script>
+    const serverBase = 'http://127.0.0.1:8000';
+
+    async function checkStatus() {
+      try {
+        const res = await fetch(`${serverBase}/rag/status`);
+        const json = await res.json();
+        document.getElementById('status').textContent = `Trạng thái: ready=${json.ready}`;
+      } catch (e) {
+        document.getElementById('status').textContent = 'Trạng thái: lỗi khi kiểm tra';
+      }
+    }
+
+    function toDataUrlFromBase64(base64, mime = 'audio/mpeg') {
+      return `data:${mime};base64,${base64}`;
+    }
+
+    async function askQuestion() {
+      const qEl = document.getElementById('question');
+      const btn = document.getElementById('askBtn');
+      const errorEl = document.getElementById('error');
+      const timingEl = document.getElementById('timing');
+      const answerEl = document.getElementById('answer');
+      const sourcesEl = document.getElementById('sources');
+      const audioEl = document.getElementById('audio');
+
+      errorEl.textContent = '';
+      answerEl.textContent = '';
+      sourcesEl.textContent = '';
+      audioEl.src = '';
+
+      const question = qEl.value.trim();
+      if (!question) { errorEl.textContent = 'Vui lòng nhập câu hỏi.'; return; }
+
+      btn.disabled = true;
+      const t0 = performance.now();
+
+      try {
+        // 1) Gọi RAG
+        const ragStart = performance.now();
+        const ragResp = await fetch(`${serverBase}/rag/query`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ question, k: 3 })
+        });
+        if (!ragResp.ok) throw new Error(`RAG lỗi: ${ragResp.status}`);
+        const ragJson = await ragResp.json();
+        const ragLatency = performance.now() - ragStart;
+
+        answerEl.textContent = ragJson.answer || '';
+        sourcesEl.textContent = `Nguồn: ids=${JSON.stringify(ragJson.source_ids)} | groups=${JSON.stringify(ragJson.groups)} | topics=${JSON.stringify(ragJson.topics)} | scores=${JSON.stringify(ragJson.scores)}`;
+
+        // 2) Gọi TTS
+        const ttsStart = performance.now();
+        let ttsLatency = 0;
+        try {
+          const ttsResp = await fetch(`${serverBase}/rag/tts`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: ragJson.answer || '', base_filename: `ans_${Date.now()}` })
+          });
+          if (ttsResp.ok) {
+            const ttsJson = await ttsResp.json();
+            ttsLatency = performance.now() - ttsStart;
+            if (ttsJson.ok && ttsJson.audio_base64) {
+              audioEl.src = toDataUrlFromBase64(ttsJson.audio_base64);
+              audioEl.play().catch(() => {});
+            } else {
+              console.warn('TTS không khả dụng:', ttsJson.error);
+            }
+          }
+        } catch (e) {
+          console.warn('TTS lỗi:', e);
+        }
+
+        const total = performance.now() - t0;
+        timingEl.textContent = `⏱ Thời gian: RAG=${ragLatency.toFixed(0)}ms | TTS=${ttsLatency.toFixed(0)}ms | Tổng=${total.toFixed(0)}ms`;
+      } catch (e) {
+        errorEl.textContent = String(e);
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    document.getElementById('askBtn').addEventListener('click', askQuestion);
+    checkStatus();
+  </script>
+</body>
+</html>

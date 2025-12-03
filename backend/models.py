@@ -19,6 +19,12 @@ class UserOut(BaseModel):
     role: Optional[str]
 
 
+class SSOIn(BaseModel):
+    email: str
+    provider: str | None = None
+    provider_id: str | None = None
+
+
 class WorkflowCreate(BaseModel):
     name: str
     description: Optional[str]
@@ -77,4 +83,41 @@ class CallReplyIn(BaseModel):
 class ConversationAgentIn(BaseModel):
     text: str
     call_id: Optional[str] = None
+
+
+class RagQueryIn(BaseModel):
+    question: str
+    k: Optional[int] = None
+    group: Optional[str] = None
+    topic: Optional[str] = None
+
+
+class RagQueryOut(BaseModel):
+    query_id: Optional[str] = None
+    answer: str
+    source_ids: Optional[list] = None
+    groups: Optional[list] = None
+    topics: Optional[list] = None
+    scores: Optional[list] = None
+    # Optional latency fields for observability
+    latency_total: Optional[float] = None
+    latency_retriever: Optional[float] = None
+    latency_context: Optional[float] = None
+    latency_prompt: Optional[float] = None
+    latency_llm: Optional[float] = None
+
+
+class TTSIn(BaseModel):
+    text: str
+    base_filename: Optional[str] = None
+    query_id: Optional[str] = None
+
+
+class TTSOut(BaseModel):
+    ok: bool
+    tts_id: Optional[str] = None
+    audio_base64: Optional[str] = None
+    audio_path: Optional[str] = None
+    latency: Optional[float] = None
+    error: Optional[str] = None
 

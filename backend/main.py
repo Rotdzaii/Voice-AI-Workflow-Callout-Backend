@@ -1,23 +1,26 @@
-from fastapi import FastAPI, Depends, HTTPException, status, WebSocket, WebSocketDisconnect, Body, Request
-from contextlib import asynccontextmanager
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from . import auth, db, models
 import asyncio
 import json
-from .config import USE_SUPABASE_SDK
-from . import supabase_client
-from .nlu import get_nlu
-from .conversation import process_turn
-from .asterisk import originate
-from .models import NLUParseIn, NLUParseOut, ConversationIn, ConversationOut, CallStartIn, CallReplyIn, ConversationAgentIn
-from fastapi.middleware.cors import CORSMiddleware
-from .routers import workflows as workflows_router
-from .deeppavlov_client import get_agent
-from starlette.responses import RedirectResponse, HTMLResponse, JSONResponse
-from urllib.parse import urlencode
-from . import oauth
+import os
+import secrets
 import socket
+from contextlib import asynccontextmanager
+
+from fastapi import Body, Depends, FastAPI, File, HTTPException, Request, Response, UploadFile, WebSocket, WebSocketDisconnect, status
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
+from starlette.responses import HTMLResponse, JSONResponse, RedirectResponse
+
+from . import auth, db, models, oauth, rag_api, supabase_client
+from .asterisk import originate
 from .config import DATABASE_URL as CFG_DATABASE_URL
+from .config import USE_SUPABASE_SDK, env_str
+from .conversation import process_turn
+from .deeppavlov_client import get_agent
+from .logging_setup import calls_started, conversation_logs_inserted, get_registry, stt_requests
+from .models import CallReplyIn, CallStartIn, ConversationAgentIn, ConversationIn, ConversationOut, NLUParseIn, NLUParseOut
+from .nlu import get_nlu
+from .routers import workflows as workflows_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -26,6 +29,19 @@ async def lifespan(app: FastAPI):
         await db.get_pool()
     except Exception:
         # Keep app running even if DB is not reachable at boot
+        pass
+    # Startup: avoid background RAG init to keep startup clean; rely on lazy init in /rag
+    try:
+        if os.environ.get("RAG_EAGER_INIT", "0") == "1":
+            try:
+                rag_api._ensure_rag()
+            except Exception as e:
+                try:
+                    import logging
+                    logging.getLogger("uvicorn").exception(f"Eager RAG init failed: {e}")
+                except Exception:
+                    pass
+    except Exception:
         pass
     yield
     # Shutdown
@@ -37,15 +53,31 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="VoiceAI - Backend (MVP)", lifespan=lifespan)
 
-# Enable CORS for frontend integration (local dev + permissive fallback)
-allowed_origins = [
-    "http://localhost:5173",  # primary Vite dev server
-    "http://localhost:3000",  # fallback dev host
-]
+# Register RAG router so /rag endpoints stay available in all builds
+app.include_router(rag_api.router, prefix="/rag")
+
+# Enable CORS for frontend integration. Always permit local dev hosts and honor
+# ALLOWED_ORIGINS when provided, while keeping a permissive wildcard fallback for demos.
+_default_allowed = ["http://localhost:5173", "http://localhost:3000", "*"]
+raw_origins = env_str("ALLOWED_ORIGINS", ",".join(_default_allowed)) or ",".join(_default_allowed)
+configured_origins = []
+allow_wildcard = False
+for origin in raw_origins.split(","):
+    entry = origin.strip()
+    if not entry:
+        continue
+    if entry == "*":
+        allow_wildcard = True
+        continue
+    configured_origins.append(entry)
+
+if not configured_origins:
+    configured_origins = [o for o in _default_allowed if o != "*"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=allowed_origins,
-    allow_origin_regex=".*",  # allow all origins when deployed (e.g., Render)
+    allow_origins=configured_origins,
+    allow_origin_regex=".*" if allow_wildcard else None,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -248,11 +280,130 @@ async def oauth_github_callback(request: Request, code: str | None = None, state
 
 @app.post("/auth/register", response_model=models.UserOut)
 async def register(user: models.UserCreate):
-    pool = await db.get_pool()
-    hashed = auth.get_password_hash(user.password)
-    async with pool.acquire() as conn:
-        row = await conn.fetchrow("INSERT INTO accounts (email, password_hash) VALUES ($1,$2) RETURNING id, email, role", user.email, hashed)
-        return {"id": str(row["id"]), "email": row["email"], "role": row["role"]}
+    """Register a new account.
+
+    If `SUPABASE_SERVICE_ROLE_KEY` is configured, use Supabase REST API to insert the account
+    (works even if direct DB TCP connections are blocked). Otherwise fall back to direct DB insert.
+    """
+    import os
+    try:
+        hashed = auth.get_password_hash(user.password)
+
+        supabase_url = os.environ.get("SUPABASE_URL")
+        supabase_key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
+        if supabase_url and supabase_key:
+            # Use Supabase REST API to insert account (service_role key bypasses RLS)
+            try:
+                import requests
+                headers = {
+                    "apikey": supabase_key,
+                    "Authorization": f"Bearer {supabase_key}",
+                    "Content-Type": "application/json",
+                    "Prefer": "return=representation",
+                }
+                payload = {"email": user.email, "password_hash": hashed, "role": "user"}
+                resp = requests.post(f"{supabase_url}/rest/v1/accounts", json=payload, headers=headers, timeout=10)
+                if resp.status_code in (200, 201):
+                    data = resp.json()
+                    # Supabase returns an array of created rows when return=representation
+                    if isinstance(data, list) and data:
+                        row = data[0]
+                        return {"id": str(row.get("id")), "email": row.get("email"), "role": row.get("role")}
+                    else:
+                        # fallback minimal response
+                        return {"id": None, "email": user.email, "role": "user"}
+                else:
+                    # Log detailed response and fall back to DB insert
+                    import logging
+                    logging.getLogger("uvicorn.error").warning("Supabase insert failed: %s %s", resp.status_code, resp.text)
+            except Exception as e:
+                import logging
+                logging.getLogger("uvicorn.error").exception("Supabase insert attempt failed: %s", e)
+
+        # Fallback: direct DB insert
+        pool = await db.get_pool()
+        async with pool.acquire() as conn:
+            row = await conn.fetchrow(
+                "INSERT INTO accounts (email, password_hash) VALUES ($1,$2) RETURNING id, email, role",
+                user.email,
+                hashed,
+            )
+            return {"id": str(row["id"]), "email": row["email"], "role": row["role"]}
+
+    except Exception as e:
+        # Log full exception for debugging but avoid leaking sensitive details to client
+        try:
+            import logging
+            logging.getLogger("uvicorn.error").exception("Register failed: %s", e)
+        except Exception:
+            pass
+        # Return a generic error to client with minimal detail
+        raise HTTPException(status_code=500, detail="Internal server error while creating account. Check server logs for details.")
+
+
+@app.post("/auth/sso", response_model=models.UserOut)
+async def sso_login(body: models.SSOIn):
+    """Create or return an account for social/OAuth sign-ins.
+
+    This accepts an email (from the frontend after successful Google sign-in)
+    and ensures an `accounts` row exists. For social accounts we generate a
+    random password hash to satisfy the NOT NULL constraint.
+    """
+    import logging
+    try:
+        email = (body.email or "").strip().lower()
+        if not email:
+            raise HTTPException(status_code=400, detail="Missing email")
+
+        # Try Supabase client first (will use service_role if configured)
+        try:
+            client = supabase_client.get_client()
+        except Exception:
+            client = None
+
+        if client:
+            try:
+                existing = client.table("accounts").select("id,email,role").eq("email", email).execute()
+                data = existing.data or []
+                if data:
+                    row = data[0]
+                    return {"id": str(row.get("id")), "email": row.get("email"), "role": row.get("role")}
+
+                # create with a random hashed password
+                rand_pwd = secrets.token_urlsafe(32)
+                pwd_hash = auth.get_password_hash(rand_pwd)
+                payload = {"email": email, "password_hash": pwd_hash, "role": "user"}
+                res = client.table("accounts").insert(payload).execute()
+                if res.data and isinstance(res.data, list):
+                    r = res.data[0]
+                    return {"id": str(r.get("id")), "email": r.get("email"), "role": r.get("role")}
+            except Exception:
+                logging.getLogger("uvicorn.error").exception("Supabase SSO upsert failed")
+
+        # Fallback to DB pool
+        pool = await db.get_pool()
+        async with pool.acquire() as conn:
+            row = await conn.fetchrow("SELECT id, email, role FROM accounts WHERE email=$1", email)
+            if row:
+                return {"id": str(row["id"]), "email": row["email"], "role": row["role"]}
+
+            rand_pwd = secrets.token_urlsafe(32)
+            pwd_hash = auth.get_password_hash(rand_pwd)
+            row = await conn.fetchrow(
+                "INSERT INTO accounts (email, password_hash) VALUES ($1,$2) RETURNING id, email, role",
+                email,
+                pwd_hash,
+            )
+            return {"id": str(row["id"]), "email": row["email"], "role": row["role"]}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        try:
+            logging.getLogger("uvicorn.error").exception("SSO register failed: %s", e)
+        except Exception:
+            pass
+        raise HTTPException(status_code=500, detail="Internal server error while processing SSO login")
 
 
 @app.post("/workflows", response_model=models.WorkflowOut)
@@ -331,6 +482,10 @@ async def call_start(
     pool = await db.get_pool()
     async with pool.acquire() as conn:
         row = await conn.fetchrow("INSERT INTO calls (workflow_id, customer_phone, status, start_time) VALUES ($1,$2,$3,NOW()) RETURNING id,status,created_at", workflow_id, customer_phone, 'in_progress')
+        try:
+            calls_started.inc()
+        except Exception:
+            pass
         return {"call_id": str(row["id"]), "status": row["status"], "started_at": row["created_at"]}
 
 
@@ -345,10 +500,18 @@ async def call_reply(
         call_id, speaker, text = body.call_id, body.speaker, body.text
     if USE_SUPABASE_SDK:
         supabase_client.rest_insert_conversation_log(call_id, speaker, text)
+        try:
+            conversation_logs_inserted.inc()
+        except Exception:
+            pass
         return {"ok": True, "via": "supabase_sdk"}
     pool = await db.get_pool()
     async with pool.acquire() as conn:
         await conn.execute("INSERT INTO conversation_logs (call_id, speaker, text, created_at) VALUES ($1,$2,$3,NOW())", call_id, speaker, text)
+    try:
+        conversation_logs_inserted.inc()
+    except Exception:
+        pass
     return {"ok": True, "via": "db_pool"}
 
 
@@ -356,7 +519,71 @@ async def call_reply(
 async def nlu_parse(body: NLUParseIn):
     nlu = get_nlu()
     parsed = nlu.parse_text(body.text)
+    # Persist intent/entities into DB for management
+    try:
+        pool = await db.get_pool()
+        async with pool.acquire() as conn:
+            # Insert intent summary into call_intents if a call_id is provided
+            call_id = getattr(body, 'call_id', None)
+            intent = parsed.get("intent") or {}
+            intent_name = intent.get("name") or intent.get("intent")
+            confidence = intent.get("confidence") or intent.get("score") or 0.0
+            if call_id and intent_name:
+                await conn.execute(
+                    "INSERT INTO call_intents(call_id, intent_name, count, accuracy) VALUES($1,$2,$3,$4)",
+                    call_id, intent_name, 1, float(confidence)
+                )
+            # Insert entities into call_entities if provided
+            entities = parsed.get("entities") or []
+            if call_id and isinstance(entities, list):
+                for ent in entities:
+                    name = ent.get("name") or ent.get("entity")
+                    value = ent.get("value") or ent.get("text")
+                    if name and value is not None:
+                        await conn.execute(
+                            "INSERT INTO call_entities(call_id, entity_name, value) VALUES($1,$2,$3)",
+                            call_id, name, str(value)
+                        )
+    except Exception as e:
+        # Non-fatal: return parse result even if DB logging fails
+        import logging
+        logging.getLogger("uvicorn").warning(f"Failed to persist NLU parse: {e}")
     return parsed
+
+
+@app.post("/stt/transcribe")
+async def stt_transcribe(file: UploadFile = File(...)):
+    """Accept an audio file upload and return transcription using local STT adapter."""
+    try:
+        data = await file.read()
+        from .stt import transcribe_bytes
+
+        try:
+            stt_requests.inc()
+        except Exception:
+            pass
+        res = transcribe_bytes(data)
+        return res
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/metrics")
+async def metrics():
+    """Prometheus metrics endpoint."""
+    payload = generate_latest(get_registry())
+    return Response(payload, media_type=CONTENT_TYPE_LATEST)
+
+
+@app.get("/reports/{workflow_id}")
+async def get_report(workflow_id: str, user=Depends(get_current_user)):
+    pool = await db.get_pool()
+    async with pool.acquire() as conn:
+        row = await conn.fetchrow("SELECT * FROM v_workflow_summary WHERE workflow_id=$1", workflow_id)
+    if not row:
+        raise HTTPException(status_code=404, detail="Report not found")
+    # Convert asyncpg record to dict
+    return dict(row)
 
 
 @app.post("/conversation/next", response_model=ConversationOut)
