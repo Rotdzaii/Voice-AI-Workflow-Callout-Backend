@@ -96,6 +96,16 @@ async def health():
     return {"status": "ok"}
 
 
+@app.get("/chat", response_class=HTMLResponse)
+async def chat_test():
+    """Serve simple chat test UI"""
+    try:
+        with open("frontend/chat_test.html", "r", encoding="utf-8") as f:
+            return HTMLResponse(content=f.read())
+    except Exception:
+        return HTMLResponse(content="<h1>Chat test not found</h1>", status_code=404)
+
+
 @app.get("/debug/db_ping")
 async def db_ping():
     """Attempt a simple DB query to verify connectivity. Returns 200 with ok=false on failure."""
