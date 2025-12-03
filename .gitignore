@@ -6,47 +6,9 @@ yarn-debug.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-# Dependency/Build artifacts
-node_modules/
-dist/
-build/
-coverage/
-*.tsbuildinfo
-
-# Runtime data
-tmp/
-temp/
-*.pid
-*.seed
-*.pid.lock
-
-# Environment & secrets
-.env
-.env.*
-*.local
-
-# Python virtualenv (nếu chạy script hỗ trợ)
-.venv/
-
-# IDE/editor
-.vscode/
-.idea/
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-
-# System junk
-.DS_Store
-Thumbs.db
-```// filepath: backend-remote/.gitignore
-# Logs
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-pnpm-debug.log*
-lerna-debug.log*
+# Bytecode caches
+__pycache__/
+*.pyc
 
 # Dependency/Build artifacts
 node_modules/
@@ -69,6 +31,7 @@ temp/
 
 # Python virtualenv (nếu chạy script hỗ trợ)
 .venv/
+venv/
 
 # IDE/editor
 .vscode/
@@ -81,3 +44,6 @@ temp/
 # System junk
 .DS_Store
 Thumbs.db
+# Google Cloud Credentials
+data/*.json
+*.json
