@@ -11,6 +11,7 @@ from .conversation import process_turn
 from .asterisk import originate
 from .models import NLUParseIn, NLUParseOut, ConversationIn, ConversationOut, CallStartIn, CallReplyIn, ConversationAgentIn
 from fastapi.middleware.cors import CORSMiddleware
+from .routers import workflows as workflows_router
 from .deeppavlov_client import get_agent
 from starlette.responses import RedirectResponse, HTMLResponse, JSONResponse
 from urllib.parse import urlencode
@@ -49,6 +50,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(workflows_router.router)
 
 
 @app.get("/health")
