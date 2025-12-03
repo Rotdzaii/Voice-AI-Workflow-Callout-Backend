@@ -72,6 +72,11 @@ for origin in raw_origins.split(","):
 if not configured_origins:
     configured_origins = [o for o in _default_allowed if o != "*"]
 
+# Allow file:// pages (Origin header is literal "null") by default so QA can open
+# the static chat_test.html without running a frontend dev server.
+if "null" not in configured_origins:
+    configured_origins.append("null")
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=configured_origins,
