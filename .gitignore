@@ -47,3 +47,7 @@ Thumbs.db
 # Google Cloud Credentials
 data/*.json
 *.json
+# Local Database & Artifacts
+mitek_chroma_db/
+tts_outputs/
+*.mp3
