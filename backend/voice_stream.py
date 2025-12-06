@@ -831,49 +831,11 @@ async def process_llm_and_tts(session: VoiceSession, user_text: str):
                 logger.warning(f"⚠️ LLM generation failed at runtime: {e}")
                 ai_text = f"Xin lỗi, tôi không thể trả lời ngay bây giờ. Bạn vừa hỏi: {user_text}"
         else:
-            # Smarter fallback: prefer OpenAI if available (OPENAI_API_KEY), otherwise keep lightweight echo.
-            try:
-                import os
-                import openai
-                openai_key = os.getenv("OPENAI_API_KEY")
-                if openai_key:
-                    openai.api_key = openai_key
-                    model = os.getenv("OPENAI_MODEL", "gpt-3.5-turbo")
-
-                    # Build chat messages
-                    messages = []
-                    messages.append({"role": "system", "content": system_role})
-                    if context_text:
-                        messages.append({"role": "system", "content": "Thông tin tham khảo: " + context_text})
-                    for m in history_items:
-                        messages.append({"role": m["role"], "content": m["text"]})
-                    messages.append({"role": "user", "content": user_text})
-
-                    def call_openai():
-                        return openai.ChatCompletion.create(
-                            model=model,
-                            messages=messages,
-                            temperature=0.7,
-                            max_tokens=300,
-                        )
-
-                    try:
-                        resp = await asyncio.wait_for(asyncio.to_thread(call_openai), timeout=8.0)
-                        ai_text = resp["choices"][0]["message"]["content"].strip()
-                        if not ai_text:
-                            raise ValueError("empty response from OpenAI")
-                        logger.info("✅ OpenAI fallback produced a response")
-                    except Exception as e:
-                        logger.warning(f"⚠️ OpenAI request failed: {e}")
-                        raise
-                else:
-                    raise ModuleNotFoundError("OPENAI_API_KEY not set")
-            except Exception:
-                # Final lightweight fallback: echo + friendly phrasing so voice flow remains smooth
-                short = user_text.strip()
-                if len(short) > 120:
-                    short = short[:117] + "..."
-                ai_text = f"Mình nghe được: '{short}'. Mình sẽ trả lời sau nếu cần chi tiết."
+            # Final lightweight fallback: echo + friendly phrasing so voice flow remains smooth (no OpenAI)
+            short = user_text.strip()
+            if len(short) > 120:
+                short = short[:117] + "..."
+            ai_text = f"Mình nghe được: '{short}'. Mình sẽ trả lời sau nếu cần chi tiết."
 
         logger.info(f"✅ LLM: Generated response: {ai_text}")
 

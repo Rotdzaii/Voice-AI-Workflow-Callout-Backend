@@ -6,6 +6,7 @@ from google.cloud import speech
 import queue
 import threading
 import shutil
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -34,12 +35,14 @@ async def transcribe_streaming(
     done_event = threading.Event()
     
     # Detect if ffmpeg is available for conversion; if not, we'll send raw chunks
-    ffmpeg_path = shutil.which("ffmpeg")
+    # Optional: allow disabling ffmpeg conversion (default off for stability on Windows)
+    use_ffmpeg = os.getenv("STT_USE_FFMPEG", "false").lower() in {"1", "true", "yes"}
+    ffmpeg_path = shutil.which("ffmpeg") if use_ffmpeg else None
     conversion_available = bool(ffmpeg_path)
     if conversion_available:
         logger.info(f"ffmpeg found at {ffmpeg_path} - conversion to LINEAR16 will be used")
     else:
-        logger.warning("ffmpeg not found on PATH - will send raw chunks to STT (WEBM/OPUS expected)")
+        logger.info("ffmpeg conversion disabled; sending WEBM/OPUS chunks directly to STT")
 
     # Choose recognition encoding depending on whether we convert to LINEAR16
     if conversion_available:
@@ -88,34 +91,38 @@ async def transcribe_streaming(
                 chunk_num += 1
                 logger.debug(f"📥 Received audio chunk #{chunk_num}: {len(chunk)} bytes")
 
-                # Convert webm/opus chunk to PCM s16le@16k with normalization + denoise using ffmpeg
-                try:
-                    ffmpeg_cmd = [
-                        "ffmpeg", "-hide_banner", "-loglevel", "error",
-                        "-i", "pipe:0",
-                        "-af", "loudnorm=I=-16:TP=-1.5:LRA=11,afftdn",
-                        "-f", "s16le", "-acodec", "pcm_s16le", "-ac", "1", "-ar", "16000", "pipe:1"
-                    ]
-                    proc = await asyncio.create_subprocess_exec(
-                        *ffmpeg_cmd,
-                        stdin=asyncio.subprocess.PIPE,
-                        stdout=asyncio.subprocess.PIPE,
-                        stderr=asyncio.subprocess.PIPE
-                    )
-                    stdout, stderr = await proc.communicate(chunk)
-                    if proc.returncode != 0:
-                        logger.warning(f"ffmpeg convert failed (rc={proc.returncode}): {stderr.decode(errors='ignore')}")
-                        # Fallback: send raw chunk unchanged (may still work with webm/opus if client supports)
+                if conversion_available:
+                    # Convert webm/opus chunk to PCM s16le@16k with normalization + denoise using ffmpeg
+                    try:
+                        ffmpeg_cmd = [
+                            "ffmpeg", "-hide_banner", "-loglevel", "error",
+                            "-i", "pipe:0",
+                            "-af", "loudnorm=I=-16:TP=-1.5:LRA=11,afftdn",
+                            "-f", "s16le", "-acodec", "pcm_s16le", "-ac", "1", "-ar", "16000", "pipe:1"
+                        ]
+                        proc = await asyncio.create_subprocess_exec(
+                            *ffmpeg_cmd,
+                            stdin=asyncio.subprocess.PIPE,
+                            stdout=asyncio.subprocess.PIPE,
+                            stderr=asyncio.subprocess.PIPE
+                        )
+                        stdout, stderr = await proc.communicate(chunk)
+                        if proc.returncode != 0:
+                            logger.warning(f"ffmpeg convert failed (rc={proc.returncode}): {stderr.decode(errors='ignore')}")
+                            # Fallback: send raw chunk unchanged (may still work with webm/opus if client supports)
+                            audio_queue.put(chunk)
+                        else:
+                            pcm = stdout
+                            logger.debug(f"📤 Converted chunk #{chunk_num} -> PCM {len(pcm)} bytes")
+                            audio_queue.put(pcm)
+                    except FileNotFoundError:
+                        logger.warning("ffmpeg not found; sending raw chunk to STT (may reduce accuracy)")
                         audio_queue.put(chunk)
-                    else:
-                        pcm = stdout
-                        logger.debug(f"📤 Converted chunk #{chunk_num} -> PCM {len(pcm)} bytes")
-                        audio_queue.put(pcm)
-                except FileNotFoundError:
-                    logger.warning("ffmpeg not found; sending raw chunk to STT (may reduce accuracy)")
-                    audio_queue.put(chunk)
-                except Exception as e:
-                    logger.exception(f"Error converting chunk to PCM: {e}")
+                    except Exception as e:
+                        logger.exception(f"Error converting chunk to PCM: {e}")
+                        audio_queue.put(chunk)
+                else:
+                    # No conversion; pass raw WebM/Opus to Google STT which supports it
                     audio_queue.put(chunk)
         except Exception as e:
             logger.exception(f"Error in audio_collector: {e}")
