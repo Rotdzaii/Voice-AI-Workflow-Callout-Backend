@@ -169,9 +169,9 @@ async def transcribe_streaming(
     except Exception as e:
         logger.exception(f"Error in transcribe_streaming: {e}")
     finally:
-        # Cleanup
+        # Cleanup - give the collector a bit more time to finish gracefully
         try:
-            await asyncio.wait_for(collector_task, timeout=2.0)
+            await asyncio.wait_for(collector_task, timeout=4.0)
         except:
             pass
         done_event.set()

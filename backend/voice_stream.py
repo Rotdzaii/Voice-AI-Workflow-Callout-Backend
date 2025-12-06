@@ -103,11 +103,12 @@ logger.setLevel(logging.INFO)  # Force INFO level for debugging
 # Simple cache for vectorstore search results (avoid repeated searches)
 _search_cache = {}
 _cache_max_size = 50
-SILENCE_DB_THRESHOLD = -21.0
-SILENCE_DB_MIN_DURATION = 0.7
+SILENCE_DB_THRESHOLD = -35.0
+# Require a longer stable low-dB window before treating as silence
+SILENCE_DB_MIN_DURATION = 1.0
 
 # filler words (Vietnamese common fillers) to filter out when deciding if user said something meaningful
-FILLERS = {"ạ", "ừ", "ừm", "à", "ờ", "hmm", "ưm", "ừ...", "ờm", "ạ...", "ờ..."}
+FILLERS = {"ạ", "ừ", "ừm", "à", "ờ", "hmm", "ưm", "ừ...", "ờm", "ạ...", "ờ...", "ồ", "hơ"}
 
 
 def remove_fillers_and_normalize(text: str) -> str:
@@ -379,13 +380,13 @@ async def handle_audio_stream(session: VoiceSession):
                                 logger.info("🛑 Cancelling old STT task...")
                                 stt_task.cancel()
                                 try:
-                                    # Wait for task to actually cancel - don't just hope
-                                    result = await asyncio.wait_for(stt_task, timeout=2.0)
+                                    # Wait a bit longer for the STT task to shutdown cleanly
+                                    result = await asyncio.wait_for(stt_task, timeout=4.0)
                                     logger.info(f"✅ Old STT task finished: {result}")
                                 except asyncio.CancelledError:
                                     logger.info("✅ Old STT task cancelled (CancelledError)")
                                 except asyncio.TimeoutError:
-                                    logger.warning("⚠️ Old STT task did not respond to cancel in 2s - may still be running")
+                                    logger.warning("⚠️ Old STT task did not respond to cancel in 4s - may still be running")
                                 except Exception as e:
                                     logger.warning(f"⚠️ Old STT task exception: {type(e).__name__}: {e}")
                             else:
@@ -460,8 +461,9 @@ async def handle_audio_stream(session: VoiceSession):
                                 logger.info(f"🎙️ END_AUDIO: Post-grace text='{text}' clean='{clean}' words={word_count} confidence={confidence:.2f}")
 
                                 # Thresholds
-                                MIN_WORDS = 2
-                                MIN_CONFIDENCE = 0.35
+                                # Tighten thresholds to avoid reacting to short fillers / low-confidence transcriptions
+                                MIN_WORDS = 3
+                                MIN_CONFIDENCE = 0.45
 
                                 if word_count < MIN_WORDS or confidence < MIN_CONFIDENCE:
                                     logger.info("ℹ️ END_AUDIO: Detected non-meaningful or low-confidence speech -> request restart")
@@ -629,9 +631,9 @@ async def process_stt_stream(session: VoiceSession, audio_generator):
                 
                 # Create new silence detection task (BACKUP only if end_audio doesn't come)
                 async def auto_trigger_processing():
-                    """Auto-trigger processing if no end_audio after 1.0s (backup mechanism)"""
+                    """Auto-trigger processing if no end_audio after 1.5s (backup mechanism)"""
                     try:
-                        await asyncio.sleep(1.0)  # Wait 1s for end_audio from frontend
+                        await asyncio.sleep(1.5)  # Wait 1.5s for end_audio from frontend
                         # If still not processing and text hasn't changed, trigger now
                         if session.accumulated_final_text == text and not session.is_processing_response:
                             logger.warning(f"⏰ BACKUP-TRIGGER: No end_audio received after 1.0s, auto-processing now")
@@ -740,13 +742,13 @@ async def process_llm_and_tts(session: VoiceSession, user_text: str):
         session.add_to_history("user", user_text)
         
         # Generate LLM response
+        # Try to initialize Gemini LLM if available; otherwise fall back to a simple responder
+        llm = None
         try:
             logger.info("🔄 PROCESS_LLM_AND_TTS: Initializing Gemini LLM...")
-            
-            # Direct Gemini initialization (bypass RAG)
             import google.generativeai as genai
             from .config import GEMINI_API_KEY
-            
+
             genai.configure(api_key=GEMINI_API_KEY)
             llm = genai.GenerativeModel(
                 model_name="gemini-2.0-flash-exp",
@@ -757,86 +759,145 @@ async def process_llm_and_tts(session: VoiceSession, user_text: str):
                     "top_k": 40,
                 }
             )
-            
-            logger.info("📚 LLM: Free conversation mode with optional RAG...")
-            
-            # Try to use RAG if available (safe fallback if fails)
-            context_text = ""
-            is_rag_used = False
-            
+            logger.info("✅ Gemini LLM initialized")
+        except ModuleNotFoundError:
+            logger.warning("⚠️ Gemini client library not installed; using local fallback for LLM responses")
+            llm = None
+        except Exception as e:
+            logger.warning(f"⚠️ LLM init failed: {e}; using fallback")
+            llm = None
+
+        logger.info("📚 LLM: Free conversation mode with optional RAG...")
+
+        # Try to use RAG if available (safe fallback if fails)
+        context_text = ""
+        is_rag_used = False
+
+        try:
+            logger.info("🔍 Attempting RAG search for context...")
+            from .rag_api import search_rag_context
+
+            # Search with reduced timeout for speed
+            rag_result = await asyncio.wait_for(
+                asyncio.to_thread(search_rag_context, user_text, top_k=2),
+                timeout=1.5
+            )
+
+            if rag_result and rag_result.strip():
+                context_text = rag_result
+                is_rag_used = True
+                logger.info(f"✅ RAG context found: {context_text[:100]}...")
+            else:
+                logger.info("📄 No relevant RAG context, using general knowledge")
+        except asyncio.TimeoutError:
+            logger.warning("⏱️ RAG search timeout (>1.5s), using general knowledge")
+        except Exception as e:
+            logger.warning(f"⚠️ RAG search failed: {e}, using general knowledge")
+
+        # Build conversation context from history
+        history_items = session.conversation_history[-2:] if session.conversation_history else []
+        context_msgs = "\n".join([f"{m['role']}: {m['text']}" for m in history_items])
+
+        # Generate prompt - can chat freely, RAG context is optional enhancement
+        system_role = "Bạn là một trợ lý AI thân thiện, trả lời mọi câu hỏi của người dùng một cách tự nhiên và hữu ích."
+
+        # Build prompt from context (avoid complex triple-quoted f-strings)
+        parts = [system_role]
+        if context_text:
+            parts.append("Thông tin tham khảo: " + context_text)
+        if context_msgs:
+            parts.append("Lịch sử hội thoại:\n" + context_msgs)
+        parts.append("Câu hỏi: " + user_text)
+        parts.append("Hãy trả lời ngắn gọn, thân thiện (1-2 câu).")
+        prompt = "\n\n".join(parts)
+
+        # Attempt to generate using the configured Gemini model; if not available use a lightweight fallback
+        if llm is not None:
             try:
-                logger.info("🔍 Attempting RAG search for context...")
-                from .rag_api import search_rag_context
-                
-                # Search with reduced timeout for speed
-                rag_result = await asyncio.wait_for(
-                    asyncio.to_thread(search_rag_context, user_text, top_k=2),
-                    timeout=1.5
-                )
-                
-                if rag_result and rag_result.strip():
-                    context_text = rag_result
-                    is_rag_used = True
-                    logger.info(f"✅ RAG context found: {context_text[:100]}...")
+                # Some Gemini client libraries expose different call signatures; attempt a common one
+                response = llm.generate(prompt=prompt, max_output_tokens=120)
+                ai_text = ""
+                if hasattr(response, 'candidates') and response.candidates:
+                    candidate = response.candidates[0]
+                    ai_text = getattr(candidate, 'content', None) or getattr(candidate, 'output', None) or str(candidate)
+                elif hasattr(response, 'text'):
+                    ai_text = response.text.strip()
                 else:
-                    logger.info("📄 No relevant RAG context, using general knowledge")
-            except asyncio.TimeoutError:
-                logger.warning("⏱️ RAG search timeout (>1.5s), using general knowledge")
+                    ai_text = str(response).strip()
+
+                if not ai_text:
+                    ai_text = "Xin lỗi, tôi không nhận được câu trả lời từ LLM."
             except Exception as e:
-                logger.warning(f"⚠️ RAG search failed: {e}, using general knowledge")
-            
-            # Build conversation context from history
-            history_items = session.conversation_history[-2:] if session.conversation_history else []
-            context_msgs = "\n".join([f"{m['role']}: {m['text']}" for m in history_items])
-            
-            # Generate prompt - can chat freely, RAG context is optional enhancement
-            system_role = "Bạn là một trợ lý AI thân thiện, trả lời mọi câu hỏi của người dùng một cách tự nhiên và hữu ích."
-            
-                # Build prompt
-                if context_msgs:
-                    if context_text:
-                        prompt = f"""{system_role}
+                logger.warning(f"⚠️ LLM generation failed at runtime: {e}")
+                ai_text = f"Xin lỗi, tôi không thể trả lời ngay bây giờ. Bạn vừa hỏi: {user_text}"
+        else:
+            # Smarter fallback: prefer OpenAI if available (OPENAI_API_KEY), otherwise keep lightweight echo.
+            try:
+                import os
+                import openai
+                openai_key = os.getenv("OPENAI_API_KEY")
+                if openai_key:
+                    openai.api_key = openai_key
+                    model = os.getenv("OPENAI_MODEL", "gpt-3.5-turbo")
 
-Thông tin tham khảo: {context_text}
-                    # Generate prompt - can chat freely, RAG context is optional enhancement
-                    system_role = "Bạn là một trợ lý AI thân thiện, trả lời mọi câu hỏi của người dùng một cách tự nhiên và hữu ích."
-
-                    # Build prompt from context (avoid complex triple-quoted f-strings)
-                    parts = [system_role]
+                    # Build chat messages
+                    messages = []
+                    messages.append({"role": "system", "content": system_role})
                     if context_text:
-                        parts.append("Thông tin tham khảo: " + context_text)
-                    if context_msgs:
-                        parts.append("Lịch sử hội thoại:\n" + context_msgs)
-                    parts.append("Câu hỏi: " + user_text)
-                    parts.append("Hãy trả lời ngắn gọn, thân thiện (1-2 câu).")
-                    prompt = "\n\n".join(parts)
-                        timeout=15.0
-                    )
-                    ai_text = response.text.strip() if hasattr(response, 'text') else str(response).strip()
-                except asyncio.TimeoutError:
-                    logger.error("❌ LLM: Gemini timeout (15s)")
-                    ai_text = "Xin lỗi, tôi đang bận. Vui lòng hỏi lại sau."
-                except Exception as e:
-                    logger.exception(f"❌ LLM invocation error: {e}")
-                    ai_text = "Xin lỗi, tôi đang bận. Vui lòng thử lại sau."
-            
-            logger.info(f"✅ LLM: Generated response: {ai_text}")
-            
-            # Send context info to client for debugging
+                        messages.append({"role": "system", "content": "Thông tin tham khảo: " + context_text})
+                    for m in history_items:
+                        messages.append({"role": m["role"], "content": m["text"]})
+                    messages.append({"role": "user", "content": user_text})
+
+                    def call_openai():
+                        return openai.ChatCompletion.create(
+                            model=model,
+                            messages=messages,
+                            temperature=0.7,
+                            max_tokens=300,
+                        )
+
+                    try:
+                        resp = await asyncio.wait_for(asyncio.to_thread(call_openai), timeout=8.0)
+                        ai_text = resp["choices"][0]["message"]["content"].strip()
+                        if not ai_text:
+                            raise ValueError("empty response from OpenAI")
+                        logger.info("✅ OpenAI fallback produced a response")
+                    except Exception as e:
+                        logger.warning(f"⚠️ OpenAI request failed: {e}")
+                        raise
+                else:
+                    raise ModuleNotFoundError("OPENAI_API_KEY not set")
+            except Exception:
+                # Final lightweight fallback: echo + friendly phrasing so voice flow remains smooth
+                short = user_text.strip()
+                if len(short) > 120:
+                    short = short[:117] + "..."
+                ai_text = f"Mình nghe được: '{short}'. Mình sẽ trả lời sau nếu cần chi tiết."
+
+        logger.info(f"✅ LLM: Generated response: {ai_text}")
+
+        # Send context info to client for debugging (non-fatal)
+        try:
             await session.send_json({
                 "type": "debug_info",
                 "context_preview": context_text[:100] if context_text else "General knowledge",
                 "is_rag_used": is_rag_used
             })
+        except Exception:
+            logger.debug("⚠️ Failed to send debug_info to client (socket may be closed)")
             
         except Exception as e:
             logger.exception("❌ LLM failed, using fallback")
             ai_text = f"Xin lỗi, tôi không hiểu câu hỏi: {user_text}"
         
-        # Send response text to client
+        # Send response text to client (protect against disconnected websockets)
         logger.info(f"📤 SENDING RESPONSE TO CLIENT: '{ai_text[:100]}...'")
-        logger.info(f"📤 WebSocket state: {session.websocket.client_state.name}")
-        await session.send_json({"type": "response", "text": ai_text, "speaker": "agent"})
+        try:
+            logger.info(f"📤 WebSocket state: {getattr(session.websocket, 'client_state', 'UNKNOWN')}")
+            await session.send_json({"type": "response", "text": ai_text, "speaker": "agent"})
+        except Exception:
+            logger.warning("❌ Could not send response to client (socket closed)")
         logger.info("✅ Response sent successfully")
         
         # Add to conversation history

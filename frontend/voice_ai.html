@@ -349,12 +349,26 @@
         }
         
         #processingBox {
-            display: none;
             margin: 20px 0;
             padding: 20px;
             background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
             border-left: 4px solid #667eea;
             border-radius: 12px;
+        }
+        /* Panel helper: keep space in layout and animate visibility to avoid layout jumps */
+        .panel {
+            display: block;
+            transition: opacity 220ms cubic-bezier(.2,.9,.2,1), transform 220ms cubic-bezier(.2,.9,.2,1);
+            opacity: 1;
+            transform: translateY(0);
+            will-change: opacity, transform;
+            min-height: 64px;
+        }
+        .panel.hidden {
+            opacity: 0;
+            transform: translateY(-6px);
+            visibility: hidden;
+            pointer-events: none;
         }
     </style>
 </head>
@@ -368,7 +382,7 @@
         </div>
         
         <!-- AI Status Panel -->
-        <div id="aiStatus" style="margin: 15px 0; padding: 15px; background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); border-left: 4px solid #1976d2; border-radius: 8px; display: none;">
+        <div id="aiStatus" class="panel hidden" style="margin: 15px 0; padding: 15px; background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); border-left: 4px solid #1976d2; border-radius: 8px;">
             <div style="font-weight: bold; color: #0d47a1; margin-bottom: 10px; font-size: 14px;">
                 🤖 Công việc hiện tại:
             </div>
@@ -395,7 +409,7 @@
                     <div style="font-size:12px; color:#4fc3f7; text-align:right;" id="noiseGateLabel">Threshold: -45 dB</div>
                 </div>
         
-        <div id="realtimeBox" style="display: none; margin: 20px 0; padding: 20px; background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%); border-left: 4px solid #ff9800; border-radius: 12px;">
+        <div id="realtimeBox" class="panel hidden" style="margin: 20px 0; padding: 20px; background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%); border-left: 4px solid #ff9800; border-radius: 12px;">
             <div style="font-weight: bold; color: #e65100; margin-bottom: 10px; font-size: 16px;">
                 🎤 Đang nghe: <span id="recordingTime">0s</span>
             </div>
@@ -404,7 +418,7 @@
             </div>
         </div>
         
-        <div id="silenceBox" style="display: none; margin: 20px 0; padding: 20px; background: linear-gradient(135deg, #fff9c4 0%, #ffeb3b 100%); border-left: 4px solid #fbc02d; border-radius: 12px;">
+        <div id="silenceBox" class="panel hidden" style="margin: 20px 0; padding: 20px; background: linear-gradient(135deg, #fff9c4 0%, #ffeb3b 100%); border-left: 4px solid #fbc02d; border-radius: 12px;">
             <div style="font-weight: bold; color: #f57f17; margin-bottom: 8px; font-size: 16px;">
                 🤫 Chờ phản hồi...
             </div>
@@ -413,7 +427,7 @@
             </div>
         </div>
         
-        <div id="liveTranscriptBox">
+        <div id="liveTranscriptBox" class="panel hidden">
             <div style="font-size: 12px; color: #888; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px;">
                 🎤 STT Debug - Xem transcript thô
             </div>
@@ -423,7 +437,7 @@
             </div>
         </div>
         
-        <div id="processingBox">
+        <div id="processingBox" class="panel hidden">
             <div style="font-weight: bold; color: #1565c0; margin-bottom: 12px;">
                 ⏳ Xử lý...
             </div>
@@ -431,14 +445,14 @@
                 <div id="sttStatus">🎯 STT: Đang nhận dạng...</div>
                 <div id="llmStatus" style="margin-top: 8px;">🧠 LLM: Chờ...</div>
                 <div id="ttsStatus" style="margin-top: 8px;">🔊 TTS: Chờ...</div>
-                <div id="ragContext" style="margin-top: 12px; padding: 10px; background: #fff9c4; border-left: 3px solid #ffc107; border-radius: 6px; font-size: 12px; display: none;">
+                <div id="ragContext" class="panel hidden" style="margin-top: 12px; padding: 10px; background: #fff9c4; border-left: 3px solid #ffc107; border-radius: 6px; font-size: 12px;">
                     <strong>📚 RAG:</strong> <span id="ragContextText"></span>
                 </div>
             </div>
         </div>
         
         <!-- Process Flow Visualization -->
-        <div id="processFlow" style="display: none; margin: 20px 0; padding: 15px; background: #f5f5f5; border-radius: 8px;">
+        <div id="processFlow" class="panel hidden" style="margin: 20px 0; padding: 15px; background: #f5f5f5; border-radius: 8px;">
             <div style="font-weight: bold; color: #333; margin-bottom: 12px; font-size: 13px;">
                 📊 PROCESS FLOW:
             </div>
@@ -735,6 +749,49 @@
         
         // Update debug panel every 500ms
         setInterval(updateDebugPanel, 500);
+        // Helper functions to show/hide panels without changing layout
+        // Use a short hide delay to coalesce rapid toggles and avoid blinking
+        // Also ensure panels remain visible for at least MIN_VISIBLE_MS to avoid flicker
+        const _panelTimers = new WeakMap();
+        const MIN_VISIBLE_MS = 600; // keep panels visible at least this long (ms)
+        function showPanel(el) {
+            if (!el) return;
+            const timers = _panelTimers.get(el) || {};
+            // If there's a pending hide timeout, cancel it
+            if (timers.hideTimeout) {
+                clearTimeout(timers.hideTimeout);
+                timers.hideTimeout = null;
+            }
+            _panelTimers.set(el, timers);
+            // Show immediately
+            el.classList.remove('hidden');
+            // mark timestamp when shown
+            timers.shownAt = Date.now();
+            _panelTimers.set(el, timers);
+            // ensure pointer events restored
+            el.style.pointerEvents = '';
+        }
+
+        function hidePanel(el, delay = 220) {
+            if (!el) return;
+            const timers = _panelTimers.get(el) || {};
+            // If already has a pending hide, clear it
+            if (timers.hideTimeout) clearTimeout(timers.hideTimeout);
+            // Delay hiding so transient toggles don't cause blink
+            // Also enforce minimum visible time
+            const now = Date.now();
+            const shownAt = timers.shownAt || 0;
+            const visibleElapsed = Math.max(0, now - shownAt);
+            const minRemaining = Math.max(0, MIN_VISIBLE_MS - visibleElapsed);
+            const effectiveDelay = Math.max(delay, minRemaining);
+            timers.hideTimeout = setTimeout(() => {
+                el.classList.add('hidden');
+                // after hidden, disable pointer events
+                el.style.pointerEvents = 'none';
+                timers.hideTimeout = null;
+            }, effectiveDelay);
+            _panelTimers.set(el, timers);
+        }
         const btnConnect = document.getElementById('btnConnect');
         const btnDisconnect = document.getElementById('btnDisconnect');
         const btnRecord = document.getElementById('btnRecord');
@@ -807,7 +864,7 @@
         }
         
         function updateAITask(task) {
-            aiStatus.style.display = 'block';
+            showPanel(aiStatus);
             aiTask.textContent = task;
             
             // Update background color based on task
@@ -849,8 +906,8 @@
         }
 
         function showRealtimeRecording() {
-            realtimeBox.style.display = 'block';
-            processingBox.style.display = 'none';
+            showPanel(realtimeBox);
+            hidePanel(processingBox);
             recordingStartTime = Date.now();
             
             recordingTimer = setInterval(() => {
@@ -865,7 +922,7 @@
         });
 
         function hideRealtimeRecording() {
-            realtimeBox.style.display = 'none';
+            hidePanel(realtimeBox);
             if (recordingTimer) {
                 clearInterval(recordingTimer);
                 recordingTimer = null;
@@ -944,7 +1001,7 @@
                 silenceCountdownInterval = null;
             }
             silenceCountdownTarget = null;
-            silenceBox.style.display = 'none';
+            hidePanel(silenceBox);
             silenceCountdown.textContent = (SILENCE_TIMEOUT_MS / 1000).toFixed(1);
         }
 
@@ -952,7 +1009,7 @@
             if (silenceTimeoutHandle || !speechDetected) {
                 return;
             }
-            silenceBox.style.display = 'block';
+            showPanel(silenceBox);
             silenceCountdownTarget = Date.now() + SILENCE_TIMEOUT_MS;
             updateSilenceCountdownText();
             silenceTimeoutHandle = setTimeout(() => {
@@ -1124,21 +1181,21 @@
                             debugIsFinal.style.color = '#ffc107';
                             updateAITask('🎤 Đang nghe: ' + data.text);
                             updateProcessFlow(0, 'start');  // Mark STT as running
-                            liveTranscriptBox.style.display = 'block';
+                            showPanel(liveTranscriptBox);
                             liveTranscript.textContent = data.text;
                             log(`🟡 Partial: "${data.text}"`, 'warning');
-                            silenceBox.style.display = 'none';
+                            hidePanel(silenceBox);
                         } else if (data.type === 'transcript_final') {
                             debugLastTranscript.textContent = data.text;
                             debugIsFinal.textContent = 'YES';
                             debugIsFinal.style.color = '#4caf50';
                             updateAITask('🧠 Đang xử lý: ' + data.text);
                             updateProcessFlow(0, 'end');  // Mark STT as complete
-                            processFlow.style.display = 'block';  // Show process flow
+                            showPanel(processFlow);  // Show process flow
                             liveTranscript.textContent = data.text;
                             log(`🟢 Final: "${data.text}"`, 'success');
                             setTimeout(() => {
-                                liveTranscriptBox.style.display = 'none';
+                                hidePanel(liveTranscriptBox);
                             }, 500);
                             
                             addMessage('user', data.text, 'user');
@@ -1180,7 +1237,7 @@
                             updateAITask('🔊 Đang phát lời nói: ' + data.text.substring(0, 40) + '...');
                             updateProcessFlow(1, 'end');  // Mark LLM as complete
                             updateProcessFlow(2, 'start');  // Mark TTS as running
-                            silenceBox.style.display = 'none';
+                            hidePanel(silenceBox);
                             
                             console.log('🔍 DEBUG: About to call addMessage with:', 'agent', data.text, 'agent');
                             addMessage('agent', data.text, 'agent');
@@ -1203,7 +1260,7 @@
                             debugProcessingStatus.style.color = '#4caf50';
                             updateAITask('🎤 Đang lắng nghe...');
                             log('✅ Ready for next question', 'success');
-                            liveTranscriptBox.style.display = 'block';
+                            showPanel(liveTranscriptBox);
                             liveTranscript.textContent = 'Hãy nói tiếp...';
                             liveTranscript.style.color = '#4caf50';
                             
@@ -1235,7 +1292,7 @@
                             
                         } else if (data.type === 'debug_info') {
                             if (data.context_preview && !data.is_greeting) {
-                                ragContext.style.display = 'block';
+                                showPanel(ragContext);
                                 ragContextText.textContent = data.context_preview;
                             }
                         }
@@ -1327,7 +1384,7 @@
                 }
                 
                 updateAITask('🎤 Đang lắng nghe...');
-                liveTranscriptBox.style.display = 'block';
+                showPanel(liveTranscriptBox);
                 liveTranscript.textContent = 'Đang chờ...';
                 log(`🎤 startRecordingFlow triggered (${triggerLabel})`, 'info');
                 
@@ -1452,7 +1509,7 @@
 
                 mediaRecorder.onstop = () => {
                     log('⏹️ Recording stopped', 'info');
-                    liveTranscriptBox.style.display = 'none';
+                    hidePanel(liveTranscriptBox);
                     const stopReason = autoStopReason;
                     if (ws && ws.readyState === WebSocket.OPEN) {
                         const payload = { type: 'end_audio' };
@@ -1503,7 +1560,7 @@
                 debugRecordingStatus.style.color = '#4caf50';
                 
                 showRealtimeRecording();
-                processingBox.style.display = 'block';
+                showPanel(processingBox);
                 updateStatus('🔴 Đang ghi âm...', 'listening');
                 btnRecord.disabled = true;
                 btnStop.disabled = false;
