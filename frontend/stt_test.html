@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎤 STT Debug Test</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 800px;
+            width: 100%;
+        }
+        h1 { text-align: center; color: #333; margin-bottom: 30px; }
+        button {
+            padding: 15px 30px;
+            font-size: 16px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            margin: 10px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        button:hover:not(:disabled) { transform: translateY(-2px); }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-start { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .btn-stop { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; }
+        .controls { text-align: center; margin: 30px 0; }
+        .log { 
+            background: #263238; 
+            color: #4dd0e1; 
+            padding: 20px; 
+            border-radius: 12px; 
+            font-family: 'Courier New', monospace; 
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+        .log-entry { margin: 5px 0; }
+        .log-partial { color: #ffc107; }
+        .log-final { color: #4caf50; font-weight: bold; }
+        .log-error { color: #f44336; }
+        .audio-level {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f5f7fa;
+            border-radius: 8px;
+        }
+        .level-bar {
+            width: 100%;
+            height: 30px;
+            background: #e0e0e0;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+        .level-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4caf50 0%, #ffc107 50%, #f44336 100%);
+            width: 0%;
+            transition: width 0.1s;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎤 STT Debug Test</h1>
+        
+        <div class="audio-level">
+            <strong>📊 Audio Level (Mic check):</strong>
+            <div class="level-bar"><div id="levelFill" class="level-fill"></div></div>
+            <div style="text-align: right; margin-top: 5px; font-size: 12px;">
+                <span id="levelText">-- dB</span>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button id="btnStart" class="btn-start">🎙️ START RECORDING</button>
+            <button id="btnStop" class="btn-stop" disabled>⏹️ STOP</button>
+        </div>
+        
+        <div class="log" id="log">
+            <div class="log-entry">🟢 Ready to test...</div>
+            <div class="log-entry">📝 Instructions:</div>
+            <div class="log-entry">   1. Click START RECORDING</div>
+            <div class="log-entry">   2. Speak clearly: "Xin chào", "Tôi tên là ...", etc.</div>
+            <div class="log-entry">   3. Wait 1 second silence</div>
+            <div class="log-entry">   4. See partial (yellow) and final (green) transcripts below</div>
+        </div>
+    </div>
+
+    <script>
+        let ws = null;
+        let mediaRecorder = null;
+        let audioContext = null;
+        let analyser = null;
+        let levelInterval = null;
+        
+        const btnStart = document.getElementById('btnStart');
+        const btnStop = document.getElementById('btnStop');
+        const logDiv = document.getElementById('log');
+        const levelFill = document.getElementById('levelFill');
+        const levelText = document.getElementById('levelText');
+        
+        function log(text, type = 'info') {
+            const entry = document.createElement('div');
+            entry.className = `log-entry log-${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${text}`;
+            logDiv.appendChild(entry);
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+        
+        btnStart.onclick = async () => {
+            try {
+                log('🔌 Connecting to WebSocket...', 'info');
+                ws = new WebSocket('ws://localhost:8000/ws/call/audio?call_id=debug_test');
+                
+                ws.onopen = async () => {
+                    log('✅ WebSocket connected', 'info');
+                    log('🎤 Starting microphone...', 'info');
+                    
+                    const stream = await navigator.mediaDevices.getUserMedia({
+                        audio: {
+                            echoCancellation: true,
+                            noiseSuppression: true,
+                            autoGainControl: true,
+                        }
+                    });
+                    
+                    log('✅ Microphone ready', 'info');
+                    
+                    // Audio level meter
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    const source = audioContext.createMediaStreamSource(stream);
+                    analyser = audioContext.createAnalyser();
+                    analyser.fftSize = 256;
+                    source.connect(analyser);
+                    
+                    const bufferLength = analyser.frequencyBinCount;
+                    const dataArray = new Uint8Array(bufferLength);
+                    
+                    levelInterval = setInterval(() => {
+                        analyser.getByteFrequencyData(dataArray);
+                        const average = dataArray.reduce((a, b) => a + b) / bufferLength;
+                        const db = 20 * Math.log10(average / 255);
+                        const percent = Math.min(100, Math.max(0, (db + 60) / 60 * 100));
+                        levelFill.style.width = percent + '%';
+                        levelText.textContent = db.toFixed(1) + ' dB';
+                    }, 100);
+                    
+                    mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+                    
+                    mediaRecorder.ondataavailable = async (event) => {
+                        if (event.data.size > 0 && ws && ws.readyState === WebSocket.OPEN) {
+                            const buffer = await event.data.arrayBuffer();
+                            ws.send(buffer);
+                        }
+                    };
+                    
+                    mediaRecorder.start(100); // 100ms chunks
+                    log('🔴 RECORDING... Speak now!', 'info');
+                    btnStart.disabled = true;
+                    btnStop.disabled = false;
+                };
+                
+                ws.onmessage = (event) => {
+                    if (!(event.data instanceof Blob)) {
+                        try {
+                            const data = JSON.parse(event.data);
+                            
+                            if (data.type === 'transcript_partial') {
+                                log(`🟡 PARTIAL: "${data.text}"`, 'partial');
+                            } else if (data.type === 'transcript_final') {
+                                log(`🟢 FINAL: "${data.text}"`, 'final');
+                            } else if (data.type === 'error') {
+                                log(`❌ ERROR: ${data.message}`, 'error');
+                            } else if (data.type === 'connected') {
+                                log(`✅ Connected: ${JSON.stringify(data)}`, 'info');
+                            }
+                        } catch (e) {
+                            // Ignore parse errors
+                        }
+                    }
+                };
+                
+                ws.onerror = (error) => {
+                    log(`❌ WebSocket error: ${error}`, 'error');
+                };
+                
+                ws.onclose = () => {
+                    log('🔌 WebSocket closed', 'info');
+                };
+                
+            } catch (error) {
+                log(`❌ ERROR: ${error.message}`, 'error');
+            }
+        };
+        
+        btnStop.onclick = () => {
+            log('⏹️ Stopping...', 'info');
+            
+            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                mediaRecorder.stop();
+            }
+            
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ type: 'end_audio' }));
+                setTimeout(() => ws.close(), 500);
+            }
+            
+            if (levelInterval) {
+                clearInterval(levelInterval);
+                levelFill.style.width = '0%';
+                levelText.textContent = '-- dB';
+            }
+            
+            if (audioContext) {
+                audioContext.close();
+            }
+            
+            btnStart.disabled = false;
+            btnStop.disabled = true;
+            log('✅ Stopped', 'info');
+        };
+    </script>
+</body>
+</html>

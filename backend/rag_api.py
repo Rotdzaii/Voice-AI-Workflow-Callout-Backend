@@ -217,3 +217,48 @@ async def tts_synthesize(payload: TTSIn):
         return TTSOut(ok=ok, tts_id=tts_id, audio_base64=audio_b64, audio_path=audio_path, latency=latency, error=error)
     except Exception as e:
         return TTSOut(ok=False, error=str(e))
+
+
+# Helper function for voice_stream.py to search RAG context
+def search_rag_context(query: str, top_k: int = 2) -> str:
+    """
+    Search RAG vectorstore and return concatenated context text.
+    Returns empty string if RAG not ready or no results found.
+    
+    Args:
+        query: User's question/text to search
+        top_k: Number of documents to retrieve (default 2 for speed)
+    
+    Returns:
+        Concatenated context string from top documents, or empty string
+    """
+    logger = logging.getLogger("uvicorn")
+    try:
+        logger.info(f"🔍 search_rag_context called with query: {query}")
+        llm, vectorstore = _ensure_rag()
+        logger.info(f"✅ RAG initialized: llm={llm is not None}, vectorstore={vectorstore is not None}")
+        
+        # Search for relevant documents
+        logger.info(f"🔍 Searching vectorstore for: {query[:50]}...")
+        docs = vectorstore.similarity_search(query, k=top_k)
+        logger.info(f"📚 Found {len(docs)} documents")
+        
+        if not docs:
+            logger.warning("⚠️ No documents found in RAG search")
+            return ""
+        
+        # Combine document contents
+        context_parts = []
+        for i, doc in enumerate(docs):
+            content = doc.page_content.strip()
+            if content:
+                context_parts.append(content)
+                logger.info(f"📄 Doc {i+1}: {content[:80]}...")
+        
+        result = "\n\n".join(context_parts)
+        logger.info(f"✅ RAG context prepared: {len(result)} chars")
+        return result
+    
+    except Exception as e:
+        logger.exception(f"❌ search_rag_context failed: {e}")
+        return ""

@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎙️ AI Voice Assistant - MITEK</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 900px;
+            width: 100%;
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 32px;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        
+        .status {
+            padding: 12px 20px;
+            margin: 15px 0;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: 600;
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .status.disconnected { 
+            background: #ffebee; 
+            color: #c62828; 
+            border-left: 4px solid #c62828;
+        }
+        .status.connected { 
+            background: #e8f5e9; 
+            color: #2e7d32;
+            border-left: 4px solid #2e7d32;
+        }
+        .status.listening { 
+            background: #fff3e0; 
+            color: #ef6c00;
+            border-left: 4px solid #ef6c00;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            padding: 12px 28px;
+            font-size: 15px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        }
+        
+        button:active:not(:disabled) {
+            transform: translateY(0);
+        }
+        
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .btn-connect {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-disconnect {
+            background: #f44336;
+            color: white;
+        }
+        
+        .btn-record {
+            background: #ff6b6b;
+            color: white;
+        }
+        
+        .btn-stop {
+            background: #fd7e14;
+            color: white;
+        }
+            color: white;
+        }
+        .btn-disconnect:hover:not(:disabled) {
+            background: #da190b;
+        }
+        .btn-record {
+            background: #2196F3;
+            color: white;
+        }
+        .btn-record:hover:not(:disabled) {
+            background: #0b7dda;
+        }
+        .btn-stop {
+            background: #ff9800;
+            color: white;
+        }
+        .btn-stop:hover:not(:disabled) {
+            background: #e68900;
+        }
+        .conversation {
+            margin-top: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        .message {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .message.user {
+            background: #e3f2fd;
+            text-align: right;
+        }
+        .message.agent {
+            background: #f3e5f5;
+            text-align: left;
+        }
+        .message.system {
+            background: #f5f5f5;
+            text-align: center;
+            font-style: italic;
+            color: #666;
+        }
+        .speaker {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .logs {
+            margin-top: 20px;
+            padding: 10px;
+            background: #f9f9f9;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .log-entry {
+            margin: 2px 0;
+        }
+        .log-info { color: #2196F3; }
+        .log-success { color: #4CAF50; }
+        .log-error { color: #f44336; }
+        .log-warning { color: #ff9800; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎙️ Voice AI Demo - MITEK</h1>
+        
+        <div id="status" class="status disconnected">
+            Chưa kết nối
+        </div>
+        
+        <div class="controls">
+            <button id="btnConnect" class="btn-connect">Kết nối</button>
+            <button id="btnDisconnect" class="btn-disconnect" disabled>Ngắt kết nối</button>
+            <button id="btnRecord" class="btn-record" disabled>🎤 Bắt đầu nói</button>
+            <button id="btnStop" class="btn-stop" disabled>⏹️ Dừng</button>
+        </div>
+        
+        <div id="realtimeBox" style="display: none; margin: 15px 0; padding: 15px; background: #fff3e0; border-left: 4px solid #ff9800; border-radius: 5px;">
+            <div style="font-weight: bold; color: #e65100; margin-bottom: 10px;">
+                🎤 Đang nghe... <span id="recordingTime">0s</span>
+            </div>
+            <div style="font-size: 14px; color: #666;">
+                📊 Audio level: <span id="audioLevel">--</span> dB
+            </div>
+            <div style="margin-top: 10px; font-size: 13px; font-style: italic; color: #666;">
+                Đang ghi âm realtime, nhấn "Dừng" để xử lý...
+            </div>
+        </div>
+        
+        <div id="processingBox" style="display: none; margin: 15px 0; padding: 15px; background: #e3f2fd; border-left: 4px solid #2196F3; border-radius: 5px;">
+            <div style="font-weight: bold; color: #1565c0; margin-bottom: 10px;">
+                ⏳ Đang xử lý...
+            </div>
+            <div style="font-size: 14px; color: #666;">
+                <div id="sttStatus">🎯 STT: Đang nhận dạng giọng nói...</div>
+                <div id="llmStatus" style="margin-top: 5px;">🧠 LLM: Chờ...</div>
+                <div id="ttsStatus" style="margin-top: 5px;">🔊 TTS: Chờ...</div>
+                <div id="ragContext" style="margin-top: 10px; padding: 10px; background: #fff9e6; border-left: 3px solid #ffc107; border-radius: 4px; font-size: 12px; display: none;">
+                    <strong>📚 RAG Context:</strong><br>
+                    <span id="ragContextText" style="color: #666;"></span>
+                </div>
+            </div>
+        </div>
+        
+        <div id="silenceBox" style="display: none; margin: 15px 0; padding: 15px; background: #fff9e6; border-left: 4px solid #ffc107; border-radius: 5px;">
+            <div style="font-weight: bold; color: #f57c00; margin-bottom: 5px;">
+                🤫 Đang chờ bạn nói tiếp...
+            </div>
+            <div style="font-size: 13px; color: #666;">
+                AI sẽ tự động trả lời sau <span id="silenceCountdown">1.2</span>s nếu bạn im lặng
+            </div>
+        </div>
+        
+        <!-- Live Transcript Box (Real-time like YouTube) -->
+        <div id="liveTranscriptBox" style="display: none; margin: 15px 0; padding: 20px; background: #000; color: #fff; border-radius: 8px; min-height: 80px;">
+            <div style="font-size: 12px; color: #888; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px;">
+                🎤 Đang nghe...
+            </div>
+            <div id="liveTranscript" style="font-size: 20px; line-height: 1.6; font-weight: 500;">
+                <!-- Live text appears here -->
+            </div>
+        </div>
+        
+        <div class="conversation" id="conversation">
+            <div class="message system">Nhấn "Kết nối" để bắt đầu...</div>
+        </div>
+        
+        <div class="logs" id="logs">
+            <div class="log-entry log-info">Sẵn sàng...</div>
+        </div>
+    </div>
+
+    <script>
+        let ws = null;
+        let mediaRecorder = null;
+        let audioContext = null;
+        let audioChunks = [];
+        let recordingStartTime = null;
+        let recordingTimer = null;
+        let analyser = null;
+        let audioLevelInterval = null;
+        let silenceTimer = null;
+        let lastTranscriptTime = null;
+
+        const statusEl = document.getElementById('status');
+        const conversationEl = document.getElementById('conversation');
+        const logsEl = document.getElementById('logs');
+        const btnConnect = document.getElementById('btnConnect');
+        const btnDisconnect = document.getElementById('btnDisconnect');
+        const btnRecord = document.getElementById('btnRecord');
+        const btnStop = document.getElementById('btnStop');
+        const realtimeBox = document.getElementById('realtimeBox');
+        const processingBox = document.getElementById('processingBox');
+        const silenceBox = document.getElementById('silenceBox');
+        const recordingTime = document.getElementById('recordingTime');
+        const audioLevel = document.getElementById('audioLevel');
+        const sttStatus = document.getElementById('sttStatus');
+        const llmStatus = document.getElementById('llmStatus');
+        const ttsStatus = document.getElementById('ttsStatus');
+        const silenceCountdown = document.getElementById('silenceCountdown');
+        const liveTranscriptBox = document.getElementById('liveTranscriptBox');
+        const liveTranscript = document.getElementById('liveTranscript');
+        const ragContext = document.getElementById('ragContext');
+        const ragContextText = document.getElementById('ragContextText');
+
+        function log(message, type = 'info') {
+            const entry = document.createElement('div');
+            entry.className = `log-entry log-${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logsEl.appendChild(entry);
+            logsEl.scrollTop = logsEl.scrollHeight;
+        }
+
+        function addMessage(speaker, text, type = 'agent') {
+            const msg = document.createElement('div');
+            msg.className = `message ${type}`;
+            
+            const speakerDiv = document.createElement('div');
+            speakerDiv.className = 'speaker';
+            speakerDiv.textContent = speaker === 'user' ? '👤 Bạn' : '🤖 AI Assistant';
+            
+            const textDiv = document.createElement('div');
+            textDiv.textContent = text;
+            
+            msg.appendChild(speakerDiv);
+            msg.appendChild(textDiv);
+            conversationEl.appendChild(msg);
+            conversationEl.scrollTop = conversationEl.scrollHeight;
+        }
+
+        function updateStatus(text, state) {
+            statusEl.textContent = text;
+            statusEl.className = `status ${state}`;
+        }
+
+        function showRealtimeRecording() {
+            realtimeBox.style.display = 'block';
+            processingBox.style.display = 'none';
+            recordingStartTime = Date.now();
+            
+            // Update recording timer
+            recordingTimer = setInterval(() => {
+                const elapsed = Math.floor((Date.now() - recordingStartTime) / 1000);
+                recordingTime.textContent = `${elapsed}s`;
+            }, 100);
+        }
+
+        function hideRealtimeRecording() {
+            realtimeBox.style.display = 'none';
+            if (recordingTimer) {
+                clearInterval(recordingTimer);
+                recordingTimer = null;
+            }
+            if (audioLevelInterval) {
+                clearInterval(audioLevelInterval);
+                audioLevelInterval = null;
+            }
+        }
+
+        function showProcessing() {
+            realtimeBox.style.display = 'none';
+            processingBox.style.display = 'block';
+            sttStatus.innerHTML = '🎯 STT: Đang nhận dạng giọng nói...';
+            llmStatus.innerHTML = '🧠 LLM: Chờ...';
+            ttsStatus.innerHTML = '🔊 TTS: Chờ...';
+        }
+
+        function hideProcessing() {
+            processingBox.style.display = 'none';
+        }
+
+        function updateSTTStatus(text) {
+            sttStatus.innerHTML = `🎯 STT: ✅ "${text}"`;
+            llmStatus.innerHTML = '🧠 LLM: Đang suy nghĩ...';
+        }
+
+        function updateLLMStatus(text) {
+            llmStatus.innerHTML = `🧠 LLM: ✅ "${text}"`;
+            ttsStatus.innerHTML = '🔊 TTS: Đang tổng hợp giọng nói...';
+        }
+
+        function updateTTSStatus(latency) {
+            ttsStatus.innerHTML = `🔊 TTS: ✅ Hoàn thành (${latency}ms)`;
+            setTimeout(() => {
+                hideProcessing();
+            }, 2000);
+        }
+
+        function updateAudioLevel(level) {
+            audioLevel.textContent = level.toFixed(1);
+        }
+
+        function startSilenceCountdown(duration) {
+            // Clear any existing timer
+            if (silenceTimer) {
+                clearInterval(silenceTimer);
+            }
+            
+            // Show silence box
+            silenceBox.style.display = 'block';
+            
+            // Start countdown
+            let remaining = duration;
+            silenceCountdown.textContent = remaining.toFixed(1);
+            
+            silenceTimer = setInterval(() => {
+                remaining -= 0.1;
+                if (remaining <= 0) {
+                    clearInterval(silenceTimer);
+                    silenceTimer = null;
+                    // Don't hide here - let 'response' message hide it
+                } else {
+                    silenceCountdown.textContent = remaining.toFixed(1);
+                }
+            }, 100);
+        }
+
+        btnConnect.onclick = async () => {
+            try {
+                // Connect to WebSocket
+                const wsUrl = `ws://localhost:8000/ws/call/audio`;
+                ws = new WebSocket(wsUrl);
+
+                ws.onopen = () => {
+                    log('WebSocket connected', 'success');
+                    updateStatus('Đã kết nối', 'connected');
+                    btnConnect.disabled = true;
+                    btnDisconnect.disabled = false;
+                    btnRecord.disabled = false;
+                };
+
+                ws.onmessage = async (event) => {
+                    if (event.data instanceof Blob) {
+                        // Audio response from server
+                        log('Received audio from server', 'success');
+                        const audioBlob = event.data;
+                        const audioUrl = URL.createObjectURL(audioBlob);
+                        const audio = new Audio(audioUrl);
+                        audio.play();
+                    } else {
+                        // JSON message
+                        const data = JSON.parse(event.data);
+                        log(`Received: ${data.type}`, 'info');
+
+                        if (data.type === 'transcript_partial') {
+                            // Show LIVE transcript like YouTube (real-time)
+                            liveTranscriptBox.style.display = 'block';
+                            liveTranscript.textContent = data.text;
+                            
+                            updateSTTStatus(data.text + ' ...');
+                            // Cancel silence timer - user still speaking
+                            if (silenceTimer) {
+                                clearInterval(silenceTimer);
+                                silenceTimer = null;
+                            }
+                            silenceBox.style.display = 'none';
+                            
+                        } else if (data.type === 'transcript_final') {
+                            // Final transcript - fade out live box, add to conversation
+                            liveTranscript.textContent = data.text;
+                            
+                            // Fade effect before hiding
+                            setTimeout(() => {
+                                liveTranscriptBox.style.display = 'none';
+                            }, 500);
+                            
+                            updateSTTStatus(data.text);
+                            addMessage('user', data.text, 'user');
+                            // Start silence countdown (1.2s for latest_long model)
+                            startSilenceCountdown(1.2);
+                            
+                        } else if (data.type === 'processing_started') {
+                            // AI started processing
+                            log('🧠 AI đang suy nghĩ...', 'info');
+                            llmStatus.innerHTML = '🧠 LLM: Đang suy nghĩ...';
+                            llmStatus.style.background = '#fff9c4';
+                            
+                        } else if (data.type === 'response') {
+                            // Hide silence box when AI responds
+                            if (silenceTimer) {
+                                clearInterval(silenceTimer);
+                                silenceTimer = null;
+                            }
+                            silenceBox.style.display = 'none';
+                            
+                            addMessage('agent', data.text, 'agent');
+                            llmStatus.textContent = '✅ LLM hoàn thành';
+                            llmStatus.style.background = '#c8e6c9';
+                            ttsStatus.textContent = '🔊 Đang tổng hợp giọng nói...';
+                            ttsStatus.style.background = '#fff9c4';
+                        } else if (data.type === 'error') {
+                            log(`Error: ${data.message}`, 'error');
+                            hideProcessing();
+                        } else if (data.type === 'audio_ready') {
+                            log(`Audio ready (latency: ${data.latency}ms)`, 'success');
+                            updateTTSStatus(data.latency);
+                            
+                        } else if (data.type === 'ready_for_input') {
+                            // AI finished responding, show live transcript again for continuous conversation
+                            log('🎤 AI sẵn sàng lắng nghe tiếp...', 'success');
+                            liveTranscriptBox.style.display = 'block';
+                            liveTranscript.textContent = 'Tôi đang lắng nghe... Hãy nói tiếp!';
+                            liveTranscript.style.color = '#4caf50';
+                            
+                            // Hide RAG context
+                            ragContext.style.display = 'none';
+                            
+                            // Reset after 2s
+                            setTimeout(() => {
+                                liveTranscript.style.color = '#fff';
+                                liveTranscript.textContent = 'Đang chờ giọng nói...';
+                            }, 2000);
+                            
+                        } else if (data.type === 'debug_info') {
+                            // Show RAG context for debugging
+                            if (data.context_preview && !data.is_greeting) {
+                                ragContext.style.display = 'block';
+                                ragContextText.textContent = data.context_preview + '...';
+                                log(`📚 RAG Context: ${data.context_preview}`, 'info');
+                            } else if (data.is_greeting) {
+                                ragContext.style.display = 'none';
+                                log('🚀 Fast path: Greeting (no RAG)', 'info');
+                            }
+                            
+                        } else if (data.type === 'connected') {
+                            if (data.mode === 'streaming') {
+                                log('Streaming mode enabled', 'success');
+                            }
+                        }
+                    }
+                };
+
+                ws.onerror = (error) => {
+                    log('WebSocket error', 'error');
+                    console.error(error);
+                };
+
+                ws.onclose = () => {
+                    log('WebSocket closed', 'warning');
+                    updateStatus('Đã ngắt kết nối', 'disconnected');
+                    btnConnect.disabled = false;
+                    btnDisconnect.disabled = true;
+                    btnRecord.disabled = true;
+                    btnStop.disabled = true;
+                };
+
+            } catch (error) {
+                log(`Connection error: ${error.message}`, 'error');
+            }
+        };
+
+        btnDisconnect.onclick = () => {
+            if (ws) {
+                ws.close();
+                ws = null;
+            }
+        };
+
+        btnRecord.onclick = async () => {
+            try {
+                // Show live transcript box when recording starts
+                liveTranscriptBox.style.display = 'block';
+                liveTranscript.textContent = 'Đang chờ giọng nói...';
+                
+                // Request microphone access with audio constraints for better quality
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    audio: {
+                        echoCancellation: true,  // Cancel echo
+                        noiseSuppression: true,  // Reduce background noise
+                        autoGainControl: true,   // Normalize volume
+                        // sampleRate: 48000,    // Commented - may cause issues
+                        // channelCount: 1       // Commented - let browser decide
+                    } 
+                });
+                log('Microphone access granted with filters', 'success');
+
+                // Create audio context for level monitoring
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const source = audioContext.createMediaStreamSource(stream);
+                analyser = audioContext.createAnalyser();
+                analyser.fftSize = 256;
+                source.connect(analyser);
+
+                const bufferLength = analyser.frequencyBinCount;
+                const dataArray = new Uint8Array(bufferLength);
+
+                // Monitor audio level
+                audioLevelInterval = setInterval(() => {
+                    analyser.getByteFrequencyData(dataArray);
+                    const average = dataArray.reduce((a, b) => a + b) / bufferLength;
+                    const db = 20 * Math.log10(average / 255);
+                    updateAudioLevel(db);
+                }, 100);
+
+                // Create MediaRecorder
+                mediaRecorder = new MediaRecorder(stream, {
+                    mimeType: 'audio/webm'
+                });
+
+                audioChunks = [];
+
+                // Send chunks immediately as they become available (REALTIME STREAMING)
+                mediaRecorder.ondataavailable = async (event) => {
+                    if (event.data.size > 0) {
+                        audioChunks.push(event.data);
+                        
+                        // Send chunk immediately to server for streaming STT
+                        if (ws && ws.readyState === WebSocket.OPEN) {
+                            const chunkBuffer = await event.data.arrayBuffer();
+                            ws.send(chunkBuffer);
+                            log(`Sent chunk: ${event.data.size} bytes (streaming)`, 'info');
+                        }
+                    }
+                };
+
+                mediaRecorder.onstop = () => {
+                    log('Recording stopped', 'info');
+                    
+                    // Hide live transcript box
+                    liveTranscriptBox.style.display = 'none';
+                    
+                    // Notify server that audio stream ended
+                    if (ws && ws.readyState === WebSocket.OPEN) {
+                        ws.send(JSON.stringify({ type: 'end_audio' }));
+                    }
+                    
+                    hideRealtimeRecording();
+                    
+                    // Stop all tracks
+                    stream.getTracks().forEach(track => track.stop());
+                    
+                    // Clean up audio context
+                    if (audioContext) {
+                        audioContext.close();
+                        audioContext = null;
+                    }
+                };
+
+                // Start recording with small chunks for low latency (100ms chunks)
+                mediaRecorder.start(100); // Send every 100ms for true streaming
+                log('Recording started (STREAMING mode)', 'success');
+                showRealtimeRecording();
+                showProcessing();  // Show processing box from the start
+                updateStatus('Đang nghe STREAMING...', 'listening');
+                btnRecord.disabled = true;
+                btnStop.disabled = false;
+
+            } catch (error) {
+                log(`Microphone error: ${error.message}`, 'error');
+            }
+        };
+
+        btnStop.onclick = () => {
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                mediaRecorder.stop();
+                log('Stopping recording and processing...', 'info');
+                updateStatus('Đang xử lý...', 'connected');
+                btnRecord.disabled = false;
+                btnStop.disabled = true;
+            }
+        };
+    </script>
+</body>
+</html>

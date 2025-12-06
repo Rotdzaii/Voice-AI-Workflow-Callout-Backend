@@ -7,7 +7,7 @@ httpx
 pytest
 passlib
 python-jose
-<<<<<<< HEAD
+python-multipart
 prometheus_client
 langchain-community
 langchain-huggingface
@@ -15,6 +15,5 @@ chromadb
 sentence-transformers
 google-generativeai
 google-cloud-texttospeech
-=======
-python-multipart
->>>>>>> 1cabb92688fdc88d5189df0136dceb69fe1bc0e0
+google-cloud-speech
+webrtcvad

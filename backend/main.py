@@ -10,7 +10,7 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 from starlette.responses import HTMLResponse, JSONResponse, RedirectResponse
 
-from . import auth, db, models, oauth, rag_api, supabase_client
+from . import auth, db, models, oauth, rag_api, supabase_client, voice_stream
 from .asterisk import originate
 from .config import USE_SUPABASE_SDK, env_str
 from .conversation import process_turn
@@ -102,6 +102,36 @@ async def chat_test():
             return HTMLResponse(content=f.read())
     except Exception:
         return HTMLResponse(content="<h1>Chat test not found</h1>", status_code=404)
+
+
+@app.get("/voice", response_class=HTMLResponse)
+async def voice_test():
+    """Serve voice AI demo UI"""
+    try:
+        with open("frontend/voice_test.html", "r", encoding="utf-8") as f:
+            return HTMLResponse(content=f.read())
+    except Exception:
+        return HTMLResponse(content="<h1>Voice test not found</h1>", status_code=404)
+
+
+@app.get("/voice_ai", response_class=HTMLResponse)
+async def voice_ai():
+    """Serve modern voice AI UI"""
+    try:
+        with open("frontend/voice_ai.html", "r", encoding="utf-8") as f:
+            return HTMLResponse(content=f.read())
+    except Exception:
+        return HTMLResponse(content="<h1>Voice AI not found</h1>", status_code=404)
+
+
+@app.get("/stt_test", response_class=HTMLResponse)
+async def stt_test():
+    """Serve STT testing UI"""
+    try:
+        with open("frontend/stt_test.html", "r", encoding="utf-8") as f:
+            return HTMLResponse(content=f.read())
+    except Exception:
+        return HTMLResponse(content="<h1>STT test not found</h1>", status_code=404)
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")
@@ -691,3 +721,14 @@ async def ws_call_logs(websocket: WebSocket, call_id: str):
                 await asyncio.sleep(2)
         except WebSocketDisconnect:
             return
+
+
+@app.websocket("/ws/call/audio")
+async def ws_voice_stream(websocket: WebSocket, call_id: str = None):
+    """Voice streaming endpoint for realtime audio communication.
+    
+    Handles bidirectional audio:
+    - Client sends audio chunks (microphone)
+    - Server responds with transcription, LLM response, and synthesized audio
+    """
+    await voice_stream.voice_stream_handler(websocket, call_id)
