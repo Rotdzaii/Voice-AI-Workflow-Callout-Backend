@@ -159,6 +159,7 @@ class VoiceSession:
         self.accumulated_final_text = ""  # Store final transcript for end_audio trigger
         self.is_processing_response = False  # Flag to prevent overlapping responses
         self.pending_final_text = ""  # Queue next user text if it arrives while processing
+        self.last_processed_final_text = ""  # Deduplicate repeated finals
         self.history_loaded = False  # Track if we've loaded previous messages
         self.current_listening_start = None  # Timestamp when current question began
         self.silence_db_low_since = None
@@ -247,6 +248,9 @@ async def _run_llm_task(session: VoiceSession, text_to_process: str, reason_labe
 
 async def initiate_processing(session: VoiceSession, reason_label: str):
     text_to_process = session.accumulated_final_text
+    if text_to_process and text_to_process == session.last_processed_final_text:
+        logger.info(f"🔁 INITIATE_PROCESSING ({reason_label}): Duplicate final detected, skipping")
+        return False
     if text_to_process and not session.is_processing_response:
         logger.info(f"✅ INITIATE_PROCESSING ({reason_label}): Will process '{text_to_process}'")
         session.is_processing_response = True
@@ -332,6 +336,11 @@ async def handle_audio_stream(session: VoiceSession):
         while session.is_active:
             try:
                 logger.info(f"🔄 LOOP #{message_count+1}: Waiting for WebSocket message... (first_audio_received={first_audio_received})")
+                # If websocket is disconnected, exit loop to avoid receive errors
+                if session.websocket.client_state.name != "CONNECTED":
+                    logger.warning("⚠️ WebSocket disconnected before receive; exiting audio loop")
+                    session.is_active = False
+                    break
                 message = await asyncio.wait_for(session.websocket.receive(), timeout=30.0)
                 message_count += 1
                 current_time = time.time()
@@ -435,6 +444,8 @@ async def handle_audio_stream(session: VoiceSession):
                             # Reset is_processing_response flag
                             session.is_processing_response = False
                             logger.info("🔄 Reset is_processing_response flag")
+                            session.last_processed_final_text = ""
+                            logger.info("🔄 Reset last_processed_final_text for new question")
                             session.current_listening_start = None
                             logger.info("🔄 Reset listening timer for new question")
                             session.silence_db_low_since = None
@@ -452,6 +463,11 @@ async def handle_audio_stream(session: VoiceSession):
                             # Client stopped speaking - trigger processing with grace + filtering
                             logger.info("🎙️ END_AUDIO: Received end_audio signal")
                             logger.info(f"🎙️ END_AUDIO: accumulated_final_text='{session.accumulated_final_text}', is_processing={session.is_processing_response}")
+
+                            # If we're already processing, ignore duplicate end_audio to prevent double responses
+                            if session.is_processing_response:
+                                logger.info("🎙️ END_AUDIO: Already processing, ignoring duplicate end_audio")
+                                continue
 
                             # Check if connection is still active
                             if not session.is_active:
@@ -500,39 +516,13 @@ async def handle_audio_stream(session: VoiceSession):
                                     if not await initiate_processing(session, "end_audio"):
                                         logger.warning(f"⚠️ END_AUDIO: Cannot process (accumulated='{session.accumulated_final_text}', processing={session.is_processing_response})")
                             else:
-                                # No final STT text yet: perform server-side VAD check on accumulated audio
-                                vad_detected = False
+                                # No final STT text -> do not process; prompt user to speak again
+                                logger.info("ℹ️ END_AUDIO: No final transcript, skipping response (final-only mode)")
+                                session.audio_buffer = bytearray()
                                 try:
-                                    if webrtcvad is None:
-                                        logger.warning("webrtcvad not installed; skipping server-side VAD check")
-                                    else:
-                                        # Decode accumulated webm/opus bytes to PCM s16le 16kHz mono using ffmpeg
-                                        pcm = None
-                                        try:
-                                            pcm = await decode_to_pcm_bytes(bytes(session.audio_buffer or b''))
-                                        except Exception as e:
-                                            logger.warning(f"Could not decode audio for VAD: {e}")
-                                        if pcm:
-                                            try:
-                                                vad_detected = check_vad_on_pcm(pcm, aggressiveness=1, min_speech_frames=2)
-                                                logger.info(f"webrtcvad: speech_detected={vad_detected}")
-                                            except Exception as e:
-                                                logger.warning(f"VAD check error: {e}")
-                                except Exception as e:
-                                    logger.exception(f"Unexpected error during server-side VAD: {e}")
-
-                                if vad_detected:
-                                    # treat like normal end_audio with speech
-                                    if not await initiate_processing(session, "end_audio_vad"):
-                                        logger.warning("⚠️ END_AUDIO(VAD): initiate_processing returned False")
-                                else:
-                                    # No speech detected -> do not call LLM; reset and tell client to restart mic
-                                    logger.info("ℹ️ END_AUDIO: No speech detected by VAD -> sending ready_for_input to client")
-                                    session.audio_buffer = bytearray()
-                                    try:
-                                        await session.send_json({"type": "ready_for_input", "message": "Tôi đang lắng nghe..."})
-                                    except Exception:
-                                        logger.debug("Could not send ready_for_input to client")
+                                    await session.send_json({"type": "ready_for_input", "message": "Tôi đang lắng nghe..."})
+                                except Exception:
+                                    logger.debug("Could not send ready_for_input to client")
                         elif cmd == "audio_level":
                             level = data.get("level")
                             if level is None:
@@ -551,9 +541,8 @@ async def handle_audio_stream(session: VoiceSession):
                                 session.silence_db_waiting = False
 
                         elif session.accumulated_final_text and session.is_processing_response:
-                            # Already processing; queue the new text to handle right after current response
-                            session.pending_final_text = session.accumulated_final_text
-                            logger.info(f"⏳ END_AUDIO: Queued pending text: '{session.pending_final_text}' (processing in progress)")
+                            # Already processing; ignore to avoid duplicate responses
+                            logger.info("⏳ END_AUDIO: Already processing, ignoring additional transcript while busy")
                             
                         elif cmd == "ping":
                             await session.send_json({"type": "pong"})
@@ -562,7 +551,8 @@ async def handle_audio_stream(session: VoiceSession):
                         pass
             except asyncio.TimeoutError:
                 logger.warning(f"⏱️ TIMEOUT waiting for message (first_audio_received={first_audio_received})")
-                await session.send_json({"type": "keepalive"})
+                if session.websocket.client_state.name == "CONNECTED":
+                    await session.send_json({"type": "keepalive"})
 
                 # Inactivity watchdog: if we have been receiving audio before and now
                 # no audio for a while, decide how to proceed to avoid hanging sessions.
@@ -618,6 +608,7 @@ async def process_stt_stream(session: VoiceSession, audio_generator):
     silence_task = None  # Track silence detection task
     last_result_time = asyncio.get_event_loop().time()
     last_partial_text = ""
+    last_partial_time = None
 
     # Inactivity watchdog: if no new results (partial or final) for 2s, endpoint with best available text
     async def inactivity_watch():
@@ -629,13 +620,14 @@ async def process_stt_stream(session: VoiceSession, audio_generator):
                     continue
                 now = asyncio.get_event_loop().time()
                 if now - last_result_time >= 2.0:
-                    logger.info("⏰ STT inactivity >=2s, auto-ending stream")
+                    logger.info("⏰ STT inactivity >=2s, checking final/partial state (final-only mode)")
                     if session.accumulated_final_text:
                         await initiate_processing(session, "inactivity_final")
-                    elif last_partial_text:
-                        # Promote last partial to final to avoid losing user speech
+                    elif last_partial_text and last_partial_time and (now - last_partial_time) >= 2.0:
+                        # Promote stable partial to final after 2s of no change
                         session.accumulated_final_text = last_partial_text
-                        await initiate_processing(session, "inactivity_partial")
+                        logger.info(f"⏫ PROMOTE PARTIAL -> FINAL after 2s idle: '{last_partial_text}'")
+                        await initiate_processing(session, "inactivity_partial_promoted")
                     else:
                         try:
                             await session.send_json({"type": "ready_for_input", "message": "Không nghe thấy gì, mời bạn nói lại."})
@@ -660,6 +652,8 @@ async def process_stt_stream(session: VoiceSession, audio_generator):
             text = result.get("text", "").strip()
             is_final = result.get("is_final", False)
             if not is_final and text:
+                if text != last_partial_text:
+                    last_partial_time = asyncio.get_event_loop().time()
                 last_partial_text = text
             
             if not text:
@@ -682,76 +676,33 @@ async def process_stt_stream(session: VoiceSession, audio_generator):
                 if session.silence_db_waiting and not session.is_processing_response:
                     await initiate_processing(session, "silence_db_final")
 
-                # Context-based end-of-sentence trigger: if the final text ends with punctuation
-                # and we are not already processing, start immediately without waiting for end_audio.
-                if not session.is_processing_response and is_sentence_end(text):
-                    logger.info("✂️ CONTEXT END: Detected sentence-ending punctuation, triggering processing")
-                    if not await initiate_processing(session, "context_end"):
-                        logger.warning("⚠️ CONTEXT END: initiate_processing returned False")
-
                 logger.info(f"✅ STT_STREAM FINAL #{final_count}: '{text}'")
                 
-                # Send final transcript to client
-                duration_ms = 0
-                if session.current_listening_start:
-                    duration_ms = int((time.time() - session.current_listening_start) * 1000)
-                await session.send_json({
-                    "type": "transcript_final",
-                    "text": text,
-                    "is_final": True,
-                    "listening_duration_ms": duration_ms
-                })
+                # Send final transcript to client (only if connected)
+                if session.websocket.client_state.name == "CONNECTED":
+                    duration_ms = 0
+                    if session.current_listening_start:
+                        duration_ms = int((time.time() - session.current_listening_start) * 1000)
+                    await session.send_json({
+                        "type": "transcript_final",
+                        "text": text,
+                        "is_final": True,
+                        "listening_duration_ms": duration_ms
+                    })
 
                 session.current_listening_start = None
                 
-                # Cancel old silence task if exists
-                if silence_task and not silence_task.done():
-                    silence_task.cancel()
-                    try:
-                        await silence_task
-                    except asyncio.CancelledError:
-                        pass
-                
-                # Create new silence detection task (BACKUP only if end_audio doesn't come)
-                async def auto_trigger_processing():
-                    """Auto-trigger processing if no end_audio after 1.5s (backup mechanism)"""
-                    try:
-                        await asyncio.sleep(1.5)  # Wait 1.5s for end_audio from frontend
-                        # If still not processing and text hasn't changed, trigger now
-                        if session.accumulated_final_text == text and not session.is_processing_response:
-                            logger.warning(f"⏰ BACKUP-TRIGGER: No end_audio received after 1.0s, auto-processing now")
-                            session.is_processing_response = True
-                            
-                            await session.send_json({
-                                "type": "processing_started",
-                                "message": "🧠 Đang suy nghĩ..."
-                            })
-                            
-                            # Create safe wrapper
-                            async def safe_process():
-                                try:
-                                    await process_llm_and_tts(session, text)
-                                except Exception as e:
-                                    logger.exception(f"Error in backup trigger: {e}")
-                                    session.is_processing_response = False
-                            
-                            asyncio.create_task(safe_process())
-                        else:
-                            logger.debug(f"⏰ BACKUP-TRIGGER: Cancelled (already processing or text changed)")
-                    except asyncio.CancelledError:
-                        logger.debug("⏰ BACKUP-TRIGGER: Cancelled (end_audio received)")
-                
-                silence_task = asyncio.create_task(auto_trigger_processing())
-                logger.info(f"⏰ STT_STREAM: Backup trigger scheduled (1.0s) - waiting for end_audio from frontend")
+                # No backup trigger: rely on explicit end_audio from frontend to avoid duplicate responses
                 
             else:
                 # Partial result: send to client for display
-                logger.debug(f"🟡 STT_STREAM PARTIAL: '{text}'")
-                await session.send_json({
-                    "type": "transcript_partial",
-                    "text": text,
-                    "is_final": False
-                })
+                if session.websocket.client_state.name == "CONNECTED":
+                    logger.debug(f"🟡 STT_STREAM PARTIAL: '{text}'")
+                    await session.send_json({
+                        "type": "transcript_partial",
+                        "text": text,
+                        "is_final": False
+                    })
         
         logger.info(f"🎤 STT_STREAM: Generator ended after {chunk_count} chunks ({final_count} final)")
                 
@@ -769,13 +720,7 @@ async def process_stt_stream(session: VoiceSession, audio_generator):
         except Exception:
             pass
         logger.info(f"🎤 STT_STREAM: Finally block - accumulated_text='{session.accumulated_final_text}', is_processing={session.is_processing_response}")
-        # When stream ends, process any accumulated text if not already processing
-        if session.accumulated_final_text and not session.is_processing_response:
-            logger.info(f"🎤 STT_STREAM: Stream ended, triggering LLM for: '{session.accumulated_final_text}'")
-            session.is_processing_response = True
-            await process_llm_and_tts(session, session.accumulated_final_text)
-        else:
-            logger.info(f"🎤 STT_STREAM: Not processing (accumulated={bool(session.accumulated_final_text)}, processing={session.is_processing_response})")
+        # Do not auto-process in finally; rely on end_audio / inactivity promotion only
 
 
 async def check_silence_and_respond(session: VoiceSession, text: str, timestamp: float, threshold: float):
@@ -830,6 +775,11 @@ async def process_llm_and_tts(session: VoiceSession, user_text: str):
         logger.info(f"📝 PROCESS_LLM_AND_TTS: Adding to history")
         session.add_to_history("user", user_text)
         
+        # If websocket already disconnected, abort early
+        if session.websocket.client_state.name != "CONNECTED":
+            logger.warning("❌ WebSocket disconnected before processing LLM; skipping response")
+            return
+
         # Generate LLM response
         # Try to initialize Gemini LLM if available; otherwise fall back to a simple responder
         llm = None
@@ -902,14 +852,13 @@ async def process_llm_and_tts(session: VoiceSession, user_text: str):
         # Attempt to generate using the configured Gemini model; if not available use a lightweight fallback
         if llm is not None:
             try:
-                # Some Gemini client libraries expose different call signatures; attempt a common one
-                response = llm.generate(prompt=prompt, max_output_tokens=120)
+                response = llm.generate_content(prompt)
                 ai_text = ""
-                if hasattr(response, 'candidates') and response.candidates:
-                    candidate = response.candidates[0]
-                    ai_text = getattr(candidate, 'content', None) or getattr(candidate, 'output', None) or str(candidate)
-                elif hasattr(response, 'text'):
-                    ai_text = response.text.strip()
+                if hasattr(response, "text"):
+                    ai_text = (response.text or "").strip()
+                elif hasattr(response, "candidates") and response.candidates:
+                    cand = response.candidates[0]
+                    ai_text = getattr(cand, "content", None) or getattr(cand, "output", None) or str(cand)
                 else:
                     ai_text = str(response).strip()
 
@@ -954,6 +903,12 @@ async def process_llm_and_tts(session: VoiceSession, user_text: str):
             logger.exception("❌ LLM failed, using fallback")
             ai_text = f"Xin lỗi, tôi không hiểu câu hỏi: {user_text}"
         
+        # Bail out cleanly if websocket is not connected
+        if session.websocket.client_state.name != "CONNECTED":
+            logger.warning("❌ WebSocket disconnected before sending response; aborting send")
+            session.accumulated_final_text = ""
+            return
+
         # Send response text to client (protect against disconnected websockets)
         logger.info(f"📤 SENDING RESPONSE TO CLIENT: '{ai_text[:100]}...'")
         try:
@@ -961,6 +916,7 @@ async def process_llm_and_tts(session: VoiceSession, user_text: str):
             await session.send_json({"type": "response", "text": ai_text, "speaker": "agent"})
         except Exception:
             logger.warning("❌ Could not send response to client (socket closed)")
+            return
         logger.info("✅ Response sent successfully")
         
         # Add to conversation history
@@ -973,35 +929,45 @@ async def process_llm_and_tts(session: VoiceSession, user_text: str):
             if audio_bytes:
                 logger.info(f"✅ TTS: Audio synthesized ({latency}ms)")
                 # Send audio back to client
-                await session.send_audio(audio_bytes)
-                await session.send_json({"type": "audio_ready", "latency": latency})
+                if session.websocket.client_state.name == "CONNECTED":
+                    await session.send_audio(audio_bytes)
+                    await session.send_json({"type": "audio_ready", "latency": latency})
+                else:
+                    logger.warning("❌ WebSocket disconnected before sending TTS audio")
             else:
                 logger.error("❌ TTS: No audio bytes generated")
-                await session.send_json({"type": "error", "message": "TTS unavailable"})
+                if session.websocket.client_state.name == "CONNECTED":
+                    await session.send_json({"type": "error", "message": "TTS unavailable"})
         except Exception as e:
             logger.exception("❌ TTS failed")
-            await session.send_json({"type": "error", "message": f"TTS error: {e}"})
+            if session.websocket.client_state.name == "CONNECTED":
+                await session.send_json({"type": "error", "message": f"TTS error: {e}"})
         
-        # Log to database if call_id exists
+        # Log to database if call_id exists (skip if missing FK)
         if session.call_id:
             try:
                 pool = await db.get_pool()
                 async with pool.acquire() as conn:
-                    # Log user message
-                    await conn.execute(
-                        "INSERT INTO conversation_logs(call_id, speaker, text, created_at) VALUES($1, $2, $3, NOW())",
-                        session.call_id, "user", user_text
-                    )
-                    # Log agent response
-                    await conn.execute(
-                        "INSERT INTO conversation_logs(call_id, speaker, text, created_at) VALUES($1, $2, $3, NOW())",
-                        session.call_id, "agent", ai_text
-                    )
+                    # Ensure call exists before logging
+                    exists = await conn.fetchval("SELECT 1 FROM calls WHERE id=$1", session.call_id)
+                    if exists:
+                        await conn.execute(
+                            "INSERT INTO conversation_logs(call_id, speaker, text, created_at) VALUES($1, $2, $3, NOW())",
+                            session.call_id, "user", user_text
+                        )
+                        await conn.execute(
+                            "INSERT INTO conversation_logs(call_id, speaker, text, created_at) VALUES($1, $2, $3, NOW())",
+                            session.call_id, "agent", ai_text
+                        )
+                    else:
+                        logger.warning(f"Skipping log: call_id {session.call_id} not in calls table")
             except Exception as e:
                 logger.warning(f"Failed to log conversation: {e}")
         
         elapsed = time.time() - start_time
         logger.info(f"✅ DONE: Full response took {elapsed:.2f}s")
+        # Mark this final as processed
+        session.last_processed_final_text = user_text
         
         # Don't reset accumulated_final_text here - let finally block check it
                 
@@ -1026,7 +992,8 @@ async def process_llm_and_tts(session: VoiceSession, user_text: str):
             return
         
         # Notify client that AI is ready to listen again
-        await session.send_json({"type": "ready_for_input", "message": "Tôi đang lắng nghe..."})
+        if session.websocket.client_state.name == "CONNECTED":
+            await session.send_json({"type": "ready_for_input", "message": "Tôi đang lắng nghe..."})
 
 
 async def handle_audio_chunk(session: VoiceSession, audio_data: bytes):

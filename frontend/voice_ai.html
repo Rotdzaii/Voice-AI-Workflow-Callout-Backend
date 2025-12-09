@@ -392,8 +392,8 @@
         </div>
         
         <div class="controls">
-            <button id="btnConnect" class="btn-connect">🔗 Kết nối</button>
-            <button id="btnDisconnect" class="btn-disconnect" disabled>❌ Ngắt</button>
+            <button id="btnConnect" class="btn-connect">🔗 Bắt đầu </button>
+            <button id="btnDisconnect" class="btn-disconnect" disabled>❌ Kết thúc </button>
             <!-- Nút Nói/Dừng ẩn đi vì mic tự động bật -->
             <button id="btnRecord" class="btn-record" disabled style="display: none;">🎤 Nói</button>
             <button id="btnStop" class="btn-stop" disabled style="display: none;">⏹️ Dừng</button>
@@ -628,12 +628,14 @@
         let noiseGateGain = null;
         let noiseGateThreshold = -45;
         //TimeRanges//
-        const SILENCE_TIMEOUT_MS = 1200; // faster auto-stop to trigger AI response sooner
+        const SILENCE_TIMEOUT_MS = 2500; // relax auto-stop to avoid cutting first-turn speech
         let silenceTimeoutHandle = null;
         let silenceAutoTriggered = false;
         let speechDetected = false;
         let autoStopReason = null;
         let ttsPlaying = false;
+        let aiProcessing = false;
+        let currentTtsAudio = null;
         let pendingAutoStartTrigger = null;
         let pendingAutoStartTimeout = null;
         let silenceCountdownInterval = null;
@@ -703,7 +705,7 @@
 
         function attemptAutoStartRecording() {
             if (!pendingAutoStartTrigger) return;
-            if (ttsPlaying) {
+            if (ttsPlaying || aiProcessing) {
                 console.log('⏳ Đang chờ TTS kết thúc trước khi tự động bắt mic');
                 return;
             }
@@ -1073,6 +1075,8 @@
         }
 
         function emitAudioLevel(level) {
+            // Avoid spamming audio levels when bot is speaking or user hasn't spoken yet
+            if (ttsPlaying || !speechDetected) return;
             if (!ws || ws.readyState !== WebSocket.OPEN) return;
             try {
                 ws.send(JSON.stringify({ type: 'audio_level', level: Number(level.toFixed(2)) }));
@@ -1124,19 +1128,42 @@
 
                 ws.onmessage = async (event) => {
                     if (event.data instanceof Blob) {
-                        ttsPlaying = true;
-                        log('🔊 Audio ready', 'success');
                         const audioBlob = event.data;
                         const audioUrl = URL.createObjectURL(audioBlob);
-                        const audio = new Audio(audioUrl);
-                        audio.addEventListener('ended', () => {
+
+                        // Stop any previous TTS playback to avoid overlapping audio
+                        if (currentTtsAudio) {
+                            try {
+                                currentTtsAudio.pause();
+                                currentTtsAudio.src = '';
+                            } catch (e) {}
+                            currentTtsAudio = null;
                             ttsPlaying = false;
+                        }
+
+                        const audio = new Audio(audioUrl);
+                        currentTtsAudio = audio;
+                        ttsPlaying = true;
+
+                        let cleanedUp = false;
+                        const cleanup = () => {
+                            if (cleanedUp) return;
+                            cleanedUp = true;
+                            if (currentTtsAudio === audio) {
+                                currentTtsAudio = null;
+                                ttsPlaying = false;
+                            }
+                            URL.revokeObjectURL(audioUrl);
+                            // Auto-listen: queue mic auto-start after TTS finishes
+                            pendingAutoStartTrigger = 'tts-ended';
                             attemptAutoStartRecording();
-                        });
+                        };
+
+                        audio.addEventListener('ended', cleanup);
+                        audio.addEventListener('error', cleanup);
                         audio.play().catch(err => {
                             console.warn('❌ Audio playback failed:', err);
-                            ttsPlaying = false;
-                            attemptAutoStartRecording();
+                            cleanup();
                         });
                     } else {
                         const data = JSON.parse(event.data);
@@ -1224,6 +1251,7 @@
                             }
                             
                         } else if (data.type === 'processing_started') {
+                            aiProcessing = true;
                             debugProcessingStatus.textContent = 'Yes';
                             debugProcessingStatus.style.color = '#ff9800';
                             updateAITask('🧠 Đang suy nghĩ và tìm kiếm thông tin...');
@@ -1249,6 +1277,7 @@
                             ttsStatus.style.background = '#fff9c4';
                             
                         } else if (data.type === 'audio_ready') {
+                            aiProcessing = false; // processing done once audio is ready to play
                             updateProcessFlow(2, 'end');  // Mark TTS as complete
                             if (!data.is_greeting) {
                                 updateAITask('✅ Hoàn tất, sẵn sàng lắng nghe câu tiếp theo...');
@@ -1257,6 +1286,7 @@
                             ttsStatus.textContent = '✅ TTS done';
                             ttsStatus.style.background = '#c8e6c9';
                         } else if (data.type === 'ready_for_input') {
+                            aiProcessing = false;
                             debugProcessingStatus.textContent = 'No';
                             debugProcessingStatus.style.color = '#4caf50';
                             updateAITask('🎤 Đang lắng nghe...');
@@ -1286,10 +1316,9 @@
                                 
                                 document.getElementById('processTimeline').textContent = 'Total: -- ms';
                             }
-                            
-                            // Auto-start mic for next question (both greeting and after response)
-                            log('🔄 Auto-starting mic once ready and audio playback settles...', 'info');
-                            requestAutoStart('auto-ready');
+                        
+                            // Do not auto-start mic on ready; wait for user speech or manual Record
+                            log('⏸️ Mic idle: click Record or start speaking', 'info');
                             
                         } else if (data.type === 'debug_info') {
                             if (data.context_preview && !data.is_greeting) {
@@ -1395,15 +1424,10 @@
                     audioLevelInterval = null;
                 }
                 
-                // Stop old mediaRecorder if still active
+                // If mediaRecorder is already active, avoid stopping it to keep continuous recording
                 if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-                    log('⚠️ startRecordingFlow: Stopping old mediaRecorder...', 'warning');
-                    try {
-                        mediaRecorder.stop();
-                    } catch (e) {
-                        log(`⚠️ Error stopping old mediaRecorder: ${e.message}`, 'warning');
-                    }
-                    await new Promise(r => setTimeout(r, 100));
+                    log('ℹ️ startRecordingFlow: mediaRecorder already recording, reusing current stream', 'info');
+                    return;
                 }
                 
                 log('🎤 startRecordingFlow: Requesting microphone...', 'info');
