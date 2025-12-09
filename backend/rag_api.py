@@ -14,6 +14,7 @@ _RAG = {
     "vectorstore": None,
     "lock": threading.Lock(),
 }
+_LAST_ERROR: Optional[str] = None
 
 # internal flag set when background init started
 _BG_INIT_STARTED = False
@@ -31,15 +32,19 @@ def _ensure_rag():
             # import here so app import doesn't run rag script on startup
             import rag.rag as rag_module
         except Exception as e:
-            raise RuntimeError(f"Failed to import rag module: {e}")
+            global _LAST_ERROR
+            _LAST_ERROR = f"Import rag module failed: {e}"
+            raise RuntimeError(_LAST_ERROR)
 
         try:
             llm, vectorstore = rag_module.init_rag()
         except Exception as e:
-            raise RuntimeError(f"Failed to init rag system: {e}")
+            _LAST_ERROR = f"Init rag failed: {e}"
+            raise RuntimeError(_LAST_ERROR)
 
         _RAG["llm"] = llm
         _RAG["vectorstore"] = vectorstore
+        _LAST_ERROR = None
         return llm, vectorstore
 
 
@@ -68,7 +73,7 @@ def start_background_init():
 def rag_status():
     """Return readiness status for the RAG system."""
     ready = bool(_RAG["llm"] and _RAG["vectorstore"])
-    return {"ready": ready}
+    return {"ready": ready, "error": _LAST_ERROR}
 
 
 @router.post("/query", response_model=RagQueryOut)

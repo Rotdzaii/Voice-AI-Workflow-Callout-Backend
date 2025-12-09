@@ -29,16 +29,11 @@ async def lifespan(app: FastAPI):
     except Exception:
         pass  # Keep app running even if DB is not reachable at boot
     
-    # Optional eager RAG initialization
-    if os.environ.get("RAG_EAGER_INIT", "0") == "1":
-        try:
-            rag_api._ensure_rag()
-        except Exception as e:
-            try:
-                import logging
-                logging.getLogger("uvicorn").exception(f"Eager RAG init failed: {e}")
-            except Exception:
-                pass
+    # Non-blocking background RAG init to make RAG ready early
+    try:
+        rag_api.start_background_init()
+    except Exception:
+        pass
     
     yield
     

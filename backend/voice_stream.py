@@ -16,6 +16,7 @@ import time
 import shutil
 import os
 import re
+import contextlib
 
 try:
     import webrtcvad
@@ -109,6 +110,23 @@ SILENCE_DB_MIN_DURATION = 1.0
 
 # filler words (Vietnamese common fillers) to filter out when deciding if user said something meaningful
 FILLERS = {"ạ", "ừ", "ừm", "à", "ờ", "hmm", "ưm", "ừ...", "ờm", "ạ...", "ờ...", "ồ", "hơ"}
+
+
+def is_sentence_end(text: str) -> bool:
+    """Heuristic to decide if a final transcript likely ends a sentence.
+
+    Uses punctuation and minimum word count to avoid cutting mid-sentence.
+    """
+    if not text:
+        return False
+    stripped = text.strip()
+    # If ends with '?' then cut immediately (questions are usually short)
+    if re.search(r"\?\s*$", stripped):
+        return True
+    # Otherwise require some content to avoid short fillers
+    if len(stripped.split()) < 4:
+        return False
+    return bool(re.search(r"[\.!?…]+\s*$", stripped))
 
 
 def remove_fillers_and_normalize(text: str) -> str:
@@ -257,6 +275,7 @@ async def handle_audio_stream(session: VoiceSession):
     stt_task = None
     audio_chunk_count = 0
     first_audio_received = False  # Track if first audio chunk arrived
+    last_audio_time = time.time()
     
     async def audio_generator():
         """Generate audio chunks from queue."""
@@ -326,6 +345,7 @@ async def handle_audio_stream(session: VoiceSession):
                 if "bytes" in message:
                     # Audio chunk received - add to queue for STT
                     audio_data = message["bytes"]
+                    last_audio_time = time.time()
                     # Append to session-level buffer for possible VAD checks later
                     try:
                         session.audio_buffer.extend(audio_data)
@@ -543,6 +563,29 @@ async def handle_audio_stream(session: VoiceSession):
             except asyncio.TimeoutError:
                 logger.warning(f"⏱️ TIMEOUT waiting for message (first_audio_received={first_audio_received})")
                 await session.send_json({"type": "keepalive"})
+
+                # Inactivity watchdog: if we have been receiving audio before and now
+                # no audio for a while, decide how to proceed to avoid hanging sessions.
+                now = time.time()
+                if first_audio_received and (now - last_audio_time) >= 1.0 and not session.is_processing_response:
+                    logger.info("🤫 INACTIVITY: >1s without audio after speech; triggering fallback")
+                    if session.accumulated_final_text:
+                        # Process what we have
+                        await initiate_processing(session, "inactivity_silence")
+                    else:
+                        # Nothing to process: reset and prompt client to speak again
+                        session.audio_buffer = bytearray()
+                        session.accumulated_final_text = ""
+                        session.pending_final_text = ""
+                        try:
+                            await session.send_json({"type": "ready_for_input", "message": "Không nghe thấy gì, mời bạn nói lại."})
+                        except Exception:
+                            logger.debug("Could not send ready_for_input on inactivity")
+                        # Reset listening state so next audio restarts STT cleanly
+                        first_audio_received = False
+                        if stt_task and not stt_task.done():
+                            stt_task.cancel()
+                    last_audio_time = now
                 continue
                 
     finally:
@@ -573,11 +616,42 @@ async def process_stt_stream(session: VoiceSession, audio_generator):
     chunk_count = 0
     final_count = 0
     silence_task = None  # Track silence detection task
+    last_result_time = asyncio.get_event_loop().time()
+    last_partial_text = ""
+
+    # Inactivity watchdog: if no new results (partial or final) for 2s, endpoint with best available text
+    async def inactivity_watch():
+        nonlocal last_result_time, last_partial_text
+        try:
+            while session.is_active:
+                await asyncio.sleep(0.5)
+                if session.is_processing_response:
+                    continue
+                now = asyncio.get_event_loop().time()
+                if now - last_result_time >= 2.0:
+                    logger.info("⏰ STT inactivity >=2s, auto-ending stream")
+                    if session.accumulated_final_text:
+                        await initiate_processing(session, "inactivity_final")
+                    elif last_partial_text:
+                        # Promote last partial to final to avoid losing user speech
+                        session.accumulated_final_text = last_partial_text
+                        await initiate_processing(session, "inactivity_partial")
+                    else:
+                        try:
+                            await session.send_json({"type": "ready_for_input", "message": "Không nghe thấy gì, mời bạn nói lại."})
+                        except Exception:
+                            logger.debug("Could not send ready_for_input on inactivity")
+                    last_result_time = now
+        except asyncio.CancelledError:
+            logger.debug("Inactivity watchdog cancelled")
+
+    watchdog_task = asyncio.create_task(inactivity_watch())
     
     try:
         logger.info("🎤 PROCESS_STT_STREAM: Calling transcribe_streaming...")
         async for result in stt_streaming.transcribe_streaming(audio_generator):
             chunk_count += 1
+            last_result_time = asyncio.get_event_loop().time()
             if not result.get("ok"):
                 logger.error(f"❌ STT_STREAM: Error result: {result}")
                 await session.send_json({"type": "error", "message": result.get("error", "STT failed")})
@@ -585,6 +659,8 @@ async def process_stt_stream(session: VoiceSession, audio_generator):
             
             text = result.get("text", "").strip()
             is_final = result.get("is_final", False)
+            if not is_final and text:
+                last_partial_text = text
             
             if not text:
                 logger.debug(f"🎤 STT_STREAM: Empty text, skipping")
@@ -605,6 +681,13 @@ async def process_stt_stream(session: VoiceSession, audio_generator):
                 
                 if session.silence_db_waiting and not session.is_processing_response:
                     await initiate_processing(session, "silence_db_final")
+
+                # Context-based end-of-sentence trigger: if the final text ends with punctuation
+                # and we are not already processing, start immediately without waiting for end_audio.
+                if not session.is_processing_response and is_sentence_end(text):
+                    logger.info("✂️ CONTEXT END: Detected sentence-ending punctuation, triggering processing")
+                    if not await initiate_processing(session, "context_end"):
+                        logger.warning("⚠️ CONTEXT END: initiate_processing returned False")
 
                 logger.info(f"✅ STT_STREAM FINAL #{final_count}: '{text}'")
                 
@@ -679,6 +762,12 @@ async def process_stt_stream(session: VoiceSession, audio_generator):
         logger.exception("❌ STT_STREAM: Exception occurred")
         await session.send_json({"type": "error", "message": str(e)})
     finally:
+        try:
+            watchdog_task.cancel()
+            with contextlib.suppress(Exception):
+                await watchdog_task
+        except Exception:
+            pass
         logger.info(f"🎤 STT_STREAM: Finally block - accumulated_text='{session.accumulated_final_text}', is_processing={session.is_processing_response}")
         # When stream ends, process any accumulated text if not already processing
         if session.accumulated_final_text and not session.is_processing_response:
@@ -772,25 +861,24 @@ async def process_llm_and_tts(session: VoiceSession, user_text: str):
         # Try to use RAG if available (safe fallback if fails)
         context_text = ""
         is_rag_used = False
-
         try:
             logger.info("🔍 Attempting RAG search for context...")
             from .rag_api import search_rag_context
 
-            # Search with reduced timeout for speed
+            # Allow a bit more time for RAG (vectorstore load) but stay bounded
             rag_result = await asyncio.wait_for(
-                asyncio.to_thread(search_rag_context, user_text, top_k=2),
-                timeout=1.5
+                asyncio.to_thread(search_rag_context, user_text, top_k=3),
+                timeout=4.0
             )
 
             if rag_result and rag_result.strip():
                 context_text = rag_result
                 is_rag_used = True
-                logger.info(f"✅ RAG context found: {context_text[:100]}...")
+                logger.info(f"✅ RAG context found: {context_text[:120]}...")
             else:
                 logger.info("📄 No relevant RAG context, using general knowledge")
         except asyncio.TimeoutError:
-            logger.warning("⏱️ RAG search timeout (>1.5s), using general knowledge")
+            logger.warning("⏱️ RAG search timeout (>4.0s), using general knowledge")
         except Exception as e:
             logger.warning(f"⚠️ RAG search failed: {e}, using general knowledge")
 
@@ -829,13 +917,26 @@ async def process_llm_and_tts(session: VoiceSession, user_text: str):
                     ai_text = "Xin lỗi, tôi không nhận được câu trả lời từ LLM."
             except Exception as e:
                 logger.warning(f"⚠️ LLM generation failed at runtime: {e}")
-                ai_text = f"Xin lỗi, tôi không thể trả lời ngay bây giờ. Bạn vừa hỏi: {user_text}"
+                # If RAG context is available, still return it instead of a generic apology
+                if context_text:
+                    snippet = context_text.strip()
+                    if len(snippet) > 240:
+                        snippet = snippet[:237] + "..."
+                    ai_text = f"Theo tài liệu: {snippet}"
+                else:
+                    ai_text = f"Xin lỗi, tôi không thể trả lời ngay bây giờ. Bạn vừa hỏi: {user_text}"
         else:
-            # Final lightweight fallback: echo + friendly phrasing so voice flow remains smooth (no OpenAI)
-            short = user_text.strip()
-            if len(short) > 120:
-                short = short[:117] + "..."
-            ai_text = f"Mình nghe được: '{short}'. Mình sẽ trả lời sau nếu cần chi tiết."
+            # Fallback without external LLM: use RAG context if available, otherwise echo
+            if context_text:
+                snippet = context_text.strip()
+                if len(snippet) > 240:
+                    snippet = snippet[:237] + "..."
+                ai_text = f"Theo tài liệu: {snippet}"
+            else:
+                short = user_text.strip()
+                if len(short) > 120:
+                    short = short[:117] + "..."
+                ai_text = f"Mình nghe được: '{short}'. Mình sẽ trả lời sau nếu cần chi tiết."
 
         logger.info(f"✅ LLM: Generated response: {ai_text}")
 
