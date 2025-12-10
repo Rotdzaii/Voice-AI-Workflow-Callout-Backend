@@ -1,6 +1,6 @@
 """
-Node 4: Google TTS Service mock
-Receives text and returns mock audio url
+Node 4: Google TTS Service skeleton
+Receives text, placeholder for TTS logic
 """
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -19,7 +19,7 @@ app.add_middleware(
 async def tts(request: Request):
     data = await request.json()
     text = data.get("text")
-    # Return mock audio url
-    return {"audio_url": f"http://localhost:9000/fake_audio/{text.replace(' ', '_')}.mp3"}
-
-# Run: uvicorn backend.mock_google_tts_node:app --reload --port 9000
+    if not text:
+        return {"error": "Missing text"}
+    # TODO: Implement TTS logic
+    return {"status": "received", "text": text, "message": "TTS logic not implemented."}
