@@ -51,3 +51,5 @@ data/*.json
 mitek_chroma_db/
 tts_outputs/
 *.mp3
+#Log
+BACKLOG.md

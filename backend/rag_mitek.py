@@ -23,7 +23,7 @@ except Exception:
     prepare_clean_chunks = None
     build_rag_system = None
     GeminiLLM = None
-    LLM_MODEL_NAME = os.environ.get("LLM_MODEL_NAME", "gemini-2.0-flash-lite")
+    LLM_MODEL_NAME = os.environ.get("LLM_MODEL_NAME", "gemini-2.0-flash")
 
 # Optional: Google Cloud TTS (only used if credentials are available)
 GOOGLE_CREDENTIALS = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
@@ -32,7 +32,9 @@ GOOGLE_CREDENTIALS = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
 def synthesize_speech(text: str, base_filename: Optional[str] = None) -> Tuple[Optional[bytes], Optional[str], float]:
     """Synthesize speech using Google Cloud Text-to-Speech if available.
 
-    Returns (audio_bytes, file_path_or_none, latency_seconds).
+    Returns (audio_bytes, file_path_or_url, latency_seconds).
+    If TTS_STORAGE=supabase, uploads to Supabase Storage and returns URL.
+    Otherwise stores locally if AUDIO_OUTPUT_DIR is set.
     If TTS is not available or credentials missing returns (None, None, 0.0).
     """
     if not GOOGLE_CREDENTIALS:
@@ -59,6 +61,22 @@ def synthesize_speech(text: str, base_filename: Optional[str] = None) -> Tuple[O
     audio_bytes = resp.audio_content
     latency = time.time() - t0
 
+    # Determine storage backend
+    storage = os.environ.get("TTS_STORAGE", "local").lower()
+    
+    if storage == "supabase":
+        # Upload to Supabase Storage
+        try:
+            from . import supabase_client
+            if base_filename:
+                path = f"tts/{base_filename}.mp3"
+                url = supabase_client.upload_tts_audio(audio_bytes, path)
+                logging.getLogger("uvicorn").info(f"TTS uploaded to Supabase: {path}")
+                return audio_bytes, url, latency
+        except Exception as e:
+            logging.getLogger("uvicorn.error").warning(f"Supabase upload failed, falling back to local: {e}")
+    
+    # Fallback: store locally
     if base_filename:
         out_dir = os.environ.get("AUDIO_OUTPUT_DIR", "tts_outputs")
         os.makedirs(out_dir, exist_ok=True)

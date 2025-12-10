@@ -28,7 +28,7 @@ LOG_FILE_PATH = os.environ.get("LOG_FILE_PATH", "rag_logs.csv")
 
 # GEMINI API key should be provided via environment variable for safety
 GEMINI_KEY = os.environ.get("GEMINI_KEY")
-LLM_MODEL_NAME = os.environ.get("LLM_MODEL_NAME", "gemini-2.0-flash-lite")
+LLM_MODEL_NAME = os.environ.get("LLM_MODEL_NAME", "gemini-2.0-flash")
 
 EMBEDDING_MODEL_NAME = os.environ.get("EMBEDDING_MODEL_NAME", "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
 MAX_RETRIEVED_CHUNKS = int(os.environ.get("MAX_RETRIEVED_CHUNKS", 3))
@@ -125,7 +125,7 @@ def prepare_clean_chunks():
 # 2. EMBEDDING + CHROMA
 # ============================================================
 
-from langchain_community.vectorstores import Chroma
+from langchain_chroma import Chroma
 from langchain_huggingface import HuggingFaceEmbeddings
 
 
@@ -184,9 +184,9 @@ class GeminiLLM:
             res = self.client.generate_content(
                 prompt,
                 generation_config={
-                    "temperature": 0.0,
-                    "top_p": 0.1,
-                    "max_output_tokens": 900
+                    "temperature": 0.3,  # Increased from 0.0 for faster response
+                    "top_p": 0.9,  # Increased from 0.1 for more variety
+                    "max_output_tokens": 200  # Reduced from 900 for voice (short answers)
                 }
             )
             return res.text or ""

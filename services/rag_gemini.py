@@ -52,7 +52,7 @@ import torch
 
 # THAY THẾ KEY GEMINI CỦA BẠN VÀO ĐÂY
 GEMINI_KEY = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
-LLM_MODEL_NAME = "gemini-2.5-flash"
+LLM_MODEL_NAME = "gemini-2.0-flash"
 
 # --- ĐƯỜNG DẪN FILE ---
 INPUT_CLEANED_DATA = Path("mitek_chunks_cleaned.csv")

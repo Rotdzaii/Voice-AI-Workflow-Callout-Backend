@@ -1,0 +1,16 @@
+import json
+
+with open("c:\\Users\\Admin\\MyProject\\va\\data\\mitek_intents_full.json", "r", encoding="utf-8") as f:
+    data = json.load(f)
+
+documents = []
+for intent in data["intents"]:
+    doc = {
+        "id": intent["name"],
+        "text": f"{intent['name']}: " + " | ".join(intent["samples"])
+    }
+    documents.append(doc)
+
+with open("rag_documents.jsonl", "w", encoding="utf-8") as f:
+    for doc in documents:
+        f.write(json.dumps(doc, ensure_ascii=False) + "\n")
