@@ -1,40 +1,40 @@
 # Voice AI Callout - 4 Node Deployment Guide
 
-## Node 1: Frontend (UI)
-- **Vị trí:** `frontend/voice_ai.html`
-- **Chức năng:**
-  - Nhập số điện thoại, gửi yêu cầu start call đến API trung gian.
-  - Gửi/nhận audio khi gọi, phát audio TTS trả về.
-- **Chạy:**
-  - Có thể mở trực tiếp file HTML hoặc deploy qua web server (nginx, http-server, ...).
-
-## Node 2: API Trung Gian (Start Call API)
-- **Vị trí:** `frontend/start_call_api.py`
-- **Chức năng:**
-  - Nhận số điện thoại từ frontend, chuyển tiếp đến backend chính qua API.
-- **Chạy:**
+## Node 1: Frontend (UI mock)
+- **Location:** `mock/frontend_node.py`
+- **Function:**
+  - Simulates sending phone number to API Gateway and prints the result.
+- **Run:**
   ```bash
-  uvicorn frontend.start_call_api:app --reload --port 4001
+  python mock/frontend_node.py
   ```
-  - Đảm bảo biến môi trường `BACKEND_URL` trỏ về endpoint `/call/start` của backend chính.
 
-## Node 3: Backend Chính (Voice AI Backend)
-- **Vị trí:** `backend/` (FastAPI, main logic)
-- **Chức năng:**
-  - Nhận yêu cầu start call, thực hiện logic gọi điện (SIP/Asterisk/Twilio).
-  - Nhận/gửi audio, xử lý STT, sinh response, gọi Google TTS, gửi audio về frontend.
-- **Chạy:**
+## Node 2: API Gateway (Start Call API)
+- **Location:** `backend/api_gateway_node.py`
+- **Function:**
+  - Receives phone number from frontend, forwards to backend node.
+- **Run:**
   ```bash
-  uvicorn backend.main:app --reload --port 8000
+  uvicorn backend.api_gateway_node:app --reload --port 4001
   ```
-  - Hoặc theo hướng dẫn trong README.
 
-## Node 4: Google TTS Service
-- **Vị trí:** Dịch vụ ngoài (Google Cloud Text-to-Speech API)
-- **Chức năng:**
-  - Nhận text từ backend, trả về audio (speech).
-- **Chạy:**
-  - Đăng ký tài khoản Google Cloud, tạo API key/service account, cấu hình trong backend (file json key, biến môi trường, ...).
+## Node 3: Backend (Voice AI Backend mock)
+- **Location:** `backend/mock_backend_node.py`
+- **Function:**
+  - Receives phone number, simulates call handling, generates response text, calls Google TTS node.
+- **Run:**
+  ```bash
+  uvicorn backend.mock_backend_node:app --reload --port 8000
+  ```
+
+## Node 4: Google TTS Service (mock)
+- **Location:** `backend/mock_google_tts_node.py`
+- **Function:**
+  - Receives text and returns mock audio url.
+- **Run:**
+  ```bash
+  uvicorn backend.mock_google_tts_node:app --reload --port 9000
+  ```
 
 ---
 

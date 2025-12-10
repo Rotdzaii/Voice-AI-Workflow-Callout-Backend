@@ -1,4 +1,4 @@
-# Node 2: API Trung Gian (Start Call API)
+# Node 2: API Gateway (Start Call API)
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 import httpx
@@ -28,4 +28,4 @@ async def start_call(request: Request):
         except Exception as e:
             return {"error": str(e)}
 
-# Chạy: uvicorn frontend.api_trung_gian_node:app --reload --port 4001
+# Run: uvicorn backend.api_gateway_node:app --reload --port 4001
