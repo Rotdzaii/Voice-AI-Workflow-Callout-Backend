@@ -69,6 +69,33 @@ def rest_update_call_recording(call_id: str, recording_url: str):
     return res.data
 
 
+def upload_tts_audio(audio_bytes: bytes, path: str) -> Optional[str]:
+    """Upload TTS audio to Supabase Storage and return public URL.
+    
+    Args:
+        audio_bytes: Audio content (MP3)
+        path: Storage path (e.g., 'tts/ans_123.mp3')
+    
+    Returns:
+        Public URL if upload succeeds, None otherwise
+    """
+    client = get_client()
+    if not client:
+        return None
+    
+    try:
+        # Upload to 'tts' bucket
+        client.storage.from_("tts").upload(path, audio_bytes)
+        
+        # Get public URL
+        url = client.storage.from_("tts").get_public_url(path)
+        return url if url else None
+    except Exception as e:
+        import logging
+        logging.getLogger("uvicorn.error").warning(f"Failed to upload TTS to Supabase: {e}")
+        return None
+
+
 # ---------- Realtime helpers ----------
 
 class RealtimeSubscription:

@@ -55,3 +55,7 @@ JWT_ISSUER = env_str("JWT_ISSUER", "voiceai-backend")
 JWT_AUDIENCE = env_str("JWT_AUDIENCE", "voiceai-frontend")
 ACCESS_TOKEN_TTL_SECONDS = env_int("ACCESS_TOKEN_TTL_SECONDS", 3600)  # 1h default
 JWT_KEY_ID = env_str("JWT_KEY_ID", "primary")
+
+# Google Cloud & Gemini
+GEMINI_API_KEY = env_str("GEMINI_KEY")
+GOOGLE_APPLICATION_CREDENTIALS = env_str("GOOGLE_APPLICATION_CREDENTIALS")

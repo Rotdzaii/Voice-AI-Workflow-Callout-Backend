@@ -152,7 +152,7 @@ def evaluate_on_chunks(df: pd.DataFrame, base_model: str, ft_model: str, limit: 
 
 def evaluate_on_logs(df: pd.DataFrame, base_model: str, ft_model: str, logs: list[dict], k_list=(1,3,5,10)):
     # Map chunk id -> row index
-    id_to_idx = {str(r["id"]): i for _, r in df.iterrows()}
+    id_to_idx = {str(r["id"]): i for i, r in df.iterrows()}
     texts = df["contents"].tolist()
     topics = df["topic"].astype(str).tolist()
 

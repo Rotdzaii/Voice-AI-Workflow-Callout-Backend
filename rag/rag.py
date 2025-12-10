@@ -184,9 +184,9 @@ class GeminiLLM:
             res = self.client.generate_content(
                 prompt,
                 generation_config={
-                    "temperature": 0.0,
-                    "top_p": 0.1,
-                    "max_output_tokens": 900
+                    "temperature": 0.3,  # Increased from 0.0 for faster response
+                    "top_p": 0.9,  # Increased from 0.1 for more variety
+                    "max_output_tokens": 200  # Reduced from 900 for voice (short answers)
                 }
             )
             return res.text or ""
