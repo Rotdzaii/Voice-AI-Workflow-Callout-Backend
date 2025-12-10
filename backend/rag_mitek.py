@@ -23,7 +23,7 @@ except Exception:
     prepare_clean_chunks = None
     build_rag_system = None
     GeminiLLM = None
-    LLM_MODEL_NAME = os.environ.get("LLM_MODEL_NAME", "gemini-2.0-flash-lite")
+    LLM_MODEL_NAME = os.environ.get("LLM_MODEL_NAME", "gemini-2.0-flash")
 
 # Optional: Google Cloud TTS (only used if credentials are available)
 GOOGLE_CREDENTIALS = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")

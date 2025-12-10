@@ -17,3 +17,5 @@ google-cloud-texttospeech
 python-multipart
 pandas
 gTTS
+edge-tts
+supabase

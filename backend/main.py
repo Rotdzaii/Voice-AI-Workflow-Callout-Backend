@@ -6,12 +6,14 @@ import json
 import logging
 import os
 import secrets
+import time
 from contextlib import asynccontextmanager
 from html import escape
 from string import Template
 from typing import Any
 
 from fastapi import (
+    APIRouter,
     Body,
     Depends,
     FastAPI,
@@ -25,16 +27,20 @@ from fastapi import (
     status,
 )
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.security import OAuth2PasswordRequestForm
 from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
-from starlette.responses import HTMLResponse, JSONResponse, RedirectResponse
+from starlette.responses import HTMLResponse, JSONResponse, RedirectResponse, StreamingResponse
+from importlib import import_module
 
 from . import auth, db, models, oauth, rag_api, supabase_client
 from .asterisk import originate
-from .config import USE_SUPABASE_SDK, env_str
+from .config import USE_SUPABASE_SDK
 from .conversation import process_turn
+from .dependencies import get_current_user
 from .deeppavlov_client import get_agent
 from .logging_setup import calls_started, conversation_logs_inserted, get_registry, stt_requests
+from .routers import workflows as workflows_router
+from .streaming import stream_events, StreamMetadata
 from .models import (
     CallReplyIn,
     CallStartIn,
@@ -47,31 +53,6 @@ from .models import (
 from .nlu import get_nlu
 
 logger = logging.getLogger("uvicorn.error")
-
-DEFAULT_ALLOWED_ORIGINS: tuple[str, ...] = (
-    "http://localhost:8000",
-    "http://127.0.0.1:8000",
-    "http://localhost:5173",
-    "http://localhost:3000",
-)
-
-
-def _maybe_add_origin(candidate: str | None, bucket: set[str]) -> None:
-    origin = (candidate or "").strip().rstrip("/")
-    if not origin or origin in {"*", "null"}:
-        return
-    bucket.add(origin)
-
-
-def _resolve_allowed_origins() -> list[str]:
-    configured: set[str] = set()
-    raw = env_str("ALLOWED_ORIGINS", "") or ""
-    for entry in raw.split(","):
-        _maybe_add_origin(entry, configured)
-    for fallback in DEFAULT_ALLOWED_ORIGINS:
-        _maybe_add_origin(fallback, configured)
-    return sorted(configured)
-
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
@@ -100,23 +81,81 @@ async def lifespan(_: FastAPI):
 
 app = FastAPI(title="VoiceAI - Backend (MVP)", lifespan=lifespan)
 
-allowed_origins = _resolve_allowed_origins()
-if not allowed_origins:
-    allowed_origins = list(DEFAULT_ALLOWED_ORIGINS)
-    logger.info("Falling back to default CORS origins: %s", allowed_origins)
+
+@app.get("/favicon.ico", include_in_schema=False)
+async def favicon() -> Response:
+    return Response(content=None, status_code=status.HTTP_204_NO_CONTENT)
+
+origins = [
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "http://127.0.0.1:5173",
+]
+
+print(f"🔒 CORS Configured for: {origins}")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=allowed_origins,
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["x-system-status"],
 )
 
 app.include_router(rag_api.router, prefix="/rag")
+app.include_router(workflows_router.router)
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")
+stream_router = APIRouter(prefix="/stream", tags=["streaming"])
 
+
+@stream_router.post("/sse")
+async def stream_sse(body: models.StreamRequest):
+    llm, vectorstore = rag_api._ensure_rag()
+    k = body.k or int(os.environ.get("MAX_RETRIEVED_CHUNKS", 3))
+
+    t_retr_start = time.time()
+    docs_scores = vectorstore.similarity_search_with_score(body.question, k=k)
+    latency_retriever = time.time() - t_retr_start
+    if not docs_scores:
+        raise HTTPException(status_code=503, detail="No context available for streaming response")
+
+    docs = [d for d, _ in docs_scores]
+    scores = [float(s) for _, s in docs_scores]
+
+    t_ctx_start = time.time()
+    context = "\n\n".join(
+        f"[id={d.metadata.get('id')} | group={d.metadata.get('group')} | topic={d.metadata.get('topic')}] {d.page_content}"
+        for d in docs
+    )
+    latency_context = time.time() - t_ctx_start
+
+    rag_module = import_module("rag.rag")
+    prompt = rag_module.BASE_PROMPT.format(context=context, question=body.question)
+
+    metadata = StreamMetadata(
+        question=body.question,
+        source_ids=[d.metadata.get("id") for d in docs],
+        groups=[d.metadata.get("group") for d in docs],
+        topics=[d.metadata.get("topic") for d in docs],
+        scores=scores,
+        latencies={
+            "retriever": latency_retriever,
+            "context": latency_context,
+        },
+    )
+
+    generator = stream_events(
+        prompt,
+        metadata,
+        include_audio=body.include_audio,
+        voice=body.voice,
+        rate=body.rate,
+    )
+    return StreamingResponse(generator, media_type="text/event-stream")
+
+
+app.include_router(stream_router)
 
 @app.get("/health")
 async def health() -> dict[str, str]:
@@ -146,23 +185,17 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
         return {"access_token": token, "token_type": "bearer"}
 
 
-async def get_current_user(token: str = Depends(oauth2_scheme)):
-    payload = auth.decode_access_token(token)
-    if not payload:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
-    user_id = payload.get("sub")
-    pool = await db.get_pool()
-    async with pool.acquire() as conn:
-        row = await conn.fetchrow("SELECT id, email, role FROM accounts WHERE id=$1", user_id)
-        if not row:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
-        return {"id": str(row["id"]), "email": row["email"], "role": row["role"]}
+@app.get("/auth/verify")
+@app.get("/auth/me")
+async def verify_token(current_user: dict = Depends(get_current_user)):
+    """Return the authenticated user's public profile if the bearer token is valid."""
+    return current_user
 
 
 @app.get("/auth/oauth/google/start")
-async def oauth_google_start():
+async def oauth_google_start(web_nonce: str | None = None):
     try:
-        url, state, nonce, code_verifier = oauth.google_auth_url()
+        url, state, nonce, code_verifier = oauth.google_auth_url(web_nonce=web_nonce)
         resp = RedirectResponse(url)
         oauth.set_state_cookie(resp, state)
         oauth.set_nonce_cookie(resp, nonce)
@@ -179,10 +212,11 @@ async def oauth_google_callback(
     code: str | None = None,
     state: str | None = None,
     nonce: str | None = None,
-    web_nonce: str | None = None,
 ):
-    if not code or not oauth.verify_state(state, "google"):
+    state_data = oauth.verify_state(state, "google")
+    if not code or not state_data:
         return HTMLResponse(_callback_html_error("google", "missing code/state"), status_code=400)
+    web_nonce = state_data.get("w")
 
     state_cookie = request.cookies.get(oauth.STATE_COOKIE_NAME)
     nonce_cookie = request.cookies.get(oauth.NONCE_COOKIE_NAME)
@@ -213,8 +247,6 @@ async def oauth_google_callback(
                 "picture": profile.get("picture"),
             }
         )
-        if web_nonce and nonce and web_nonce != nonce:
-            return HTMLResponse(_callback_html_error("google", "web_nonce mismatch"), status_code=400)
         return HTMLResponse(_callback_html_success("google", app_token, web_nonce))
     except Exception as exc:
         logger.exception("Google OAuth callback failed")
@@ -222,9 +254,9 @@ async def oauth_google_callback(
 
 
 @app.get("/auth/oauth/github/start")
-async def oauth_github_start():
+async def oauth_github_start(web_nonce: str | None = None):
     try:
-        url, state = oauth.github_auth_url()
+        url, state = oauth.github_auth_url(web_nonce=web_nonce)
         resp = RedirectResponse(url)
         oauth.set_state_cookie(resp, state)
         return resp
@@ -238,10 +270,11 @@ async def oauth_github_callback(
     request: Request,
     code: str | None = None,
     state: str | None = None,
-    web_nonce: str | None = None,
 ):
-    if not code or not oauth.verify_state(state, "github"):
+    state_data = oauth.verify_state(state, "github")
+    if not code or not state_data:
         return HTMLResponse(_callback_html_error("github", "missing code/state"), status_code=400)
+    web_nonce = state_data.get("w")
 
     state_cookie = request.cookies.get(oauth.STATE_COOKIE_NAME)
     if not oauth.verify_cookies(state_cookie, None, state, None):
@@ -652,10 +685,15 @@ async def ws_call_logs(websocket: WebSocket, call_id: str):
 
 
 def _callback_html_success(provider: str, token: str, web_nonce: str | None = None) -> str:
+    nonce = web_nonce or ""
+    allowed_origin = "*"
+    if nonce and ":" in nonce:
+        allowed_origin = nonce
+        nonce = ""
     tmpl = Template(
-        """<!doctype html>\n<html><head><meta charset='utf-8'><title>Login Success</title></head>\n<body>\n<script>\n    try {\n        if (window.opener) {\n            window.opener.postMessage({"type":"oauth","provider":"$provider","ok":true,"token":"$token","web_nonce":"$web_nonce"}, "*");\n        }\n    } catch (e) {}\n    window.close();\n    document.body.innerText = 'You can close this window.';\n</script>\n</body></html>"""
+        """<!doctype html>\n<html><head><meta charset='utf-8'><title>Login Success</title></head>\n<body>\n<script>\n    try {\n        if (window.opener) {\n            window.opener.postMessage({"type":"oauth","provider":"$provider","ok":true,"token":"$token","web_nonce":"$web_nonce"}, "$target");\n        }\n    } catch (e) {}\n    window.close();\n    document.body.innerText = 'You can close this window.';\n</script>\n</body></html>"""
     )
-    return tmpl.substitute(provider=provider, token=token, web_nonce=web_nonce or "")
+    return tmpl.substitute(provider=provider, token=token, web_nonce=nonce, target=allowed_origin)
 
 
 def _callback_html_error(provider: str, message: str) -> str:

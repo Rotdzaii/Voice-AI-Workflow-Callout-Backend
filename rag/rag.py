@@ -28,7 +28,7 @@ LOG_FILE_PATH = os.environ.get("LOG_FILE_PATH", "rag_logs.csv")
 
 # GEMINI API key should be provided via environment variable for safety
 GEMINI_KEY = os.environ.get("GEMINI_KEY")
-LLM_MODEL_NAME = os.environ.get("LLM_MODEL_NAME", "gemini-2.0-flash-lite")
+LLM_MODEL_NAME = os.environ.get("LLM_MODEL_NAME", "gemini-2.0-flash")
 
 EMBEDDING_MODEL_NAME = os.environ.get("EMBEDDING_MODEL_NAME", "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
 MAX_RETRIEVED_CHUNKS = int(os.environ.get("MAX_RETRIEVED_CHUNKS", 3))

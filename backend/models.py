@@ -121,3 +121,13 @@ class TTSOut(BaseModel):
     latency: Optional[float] = None
     error: Optional[str] = None
 
+
+class StreamRequest(BaseModel):
+    question: str
+    k: Optional[int] = None
+    group: Optional[str] = None
+    topic: Optional[str] = None
+    include_audio: bool = True
+    voice: Optional[str] = None
+    rate: Optional[str] = None
+
