@@ -192,7 +192,7 @@ async def save_workflow(
 
 @router.delete("/{workflow_id}")
 async def delete_workflow(workflow_id: str, current_user: dict = Depends(get_current_user)):
-    client = _require_supabase_client()
+    client = _get_supabase_client()
     builder = (
         client.table("workflows")
         .delete()

@@ -31,6 +31,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 from starlette.responses import HTMLResponse, JSONResponse, RedirectResponse, StreamingResponse
 from importlib import import_module
+from pydantic import BaseModel, Field
 
 from . import auth, db, models, oauth, rag_api, supabase_client, voice_stream
 from .asterisk import originate
@@ -53,6 +54,12 @@ from .models import (
 from .nlu import get_nlu
 
 logger = logging.getLogger("uvicorn.error")
+
+
+class WorkflowExecutionRequest(BaseModel):
+    workflow_id: str
+    nodes: list[dict[str, Any]] = Field(default_factory=list)
+    edges: list[dict[str, Any]] = Field(default_factory=list)
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
@@ -151,6 +158,16 @@ async def stream_sse(body: models.StreamRequest):
 
 
 app.include_router(stream_router)
+
+
+@app.post("/api/v1/workflows/run")
+async def run_workflow(body: WorkflowExecutionRequest, user: dict[str, Any] = Depends(get_current_user)):
+    del user  # auth guard only
+    node_count = len(body.nodes)
+    message = f"🔥 Received Workflow with {node_count} nodes"
+    print(message)
+    logger.info(message)
+    return {"status": "success", "message": "Workflow received at Backend"}
 
 @app.get("/health")
 async def health() -> dict[str, str]:
