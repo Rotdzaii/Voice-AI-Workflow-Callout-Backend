@@ -6,8 +6,12 @@ pydantic
 httpx
 pytest
 passlib
+<<<<<<< HEAD
 python-jose
 python-multipart
+=======
+python-jose[cryptography]
+>>>>>>> origin/develop
 prometheus_client
 langchain-community
 langchain-huggingface
@@ -15,5 +19,13 @@ chromadb
 sentence-transformers
 google-generativeai
 google-cloud-texttospeech
+<<<<<<< HEAD
 google-cloud-speech
 webrtcvad
+=======
+python-multipart
+pandas
+gTTS
+edge-tts
+supabase
+>>>>>>> origin/develop

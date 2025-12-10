@@ -75,12 +75,62 @@ pytest -q
 - NLU: `/nlu/parse`, `/conversation/next`, `/conversation/agent`.
 - Telephony: `/call/originate`.
 - Ý định & Thực thể: `/intents`, `/entities`.
+- Streaming Gemini + TTS: `/stream/sse` (Server-Sent Events).
+
+### Streaming Gemini + TTS (`/stream/sse`)
+
+- **Body mẫu**
+
+```json
+POST /stream/sse
+{
+	"question": "Tóm tắt ưu điểm sản phẩm X",
+	"k": 3,
+	"include_audio": true,
+	"voice": "en-US-AriaNeural",
+	"rate": "+0%"
+}
+```
+
+- **Định dạng phản hồi**: luồng SSE với các sự kiện `text`, `audio`, `log`, `error`.
+	- `text` chứa từng đoạn Gemini trả về ngay khi có chunk.
+	- `audio` chứa base64 các đoạn MP3 (Edge TTS stream). Ghép chuỗi base64 để phát dần.
+	- `log` cung cấp các mốc thời gian: `request_start`, `received_text_chunk`, `tts_start_chunk`, `tts_chunk_emitted`, `response_end`.
+
+- **Client Web (SSE + Web Audio)**
+
+```ts
+const es = new EventSource("http://localhost:8000/stream/sse", {
+	withCredentials: true,
+});
+
+es.onmessage = (evt) => {
+	const payload = JSON.parse(evt.data);
+	if (payload.type === "text") {
+		appendToTranscript(payload.chunk);
+	}
+	if (payload.type === "audio") {
+		const bytes = Uint8Array.from(atob(payload.chunk), c => c.charCodeAt(0));
+		audioQueue.enqueue(bytes.buffer); // dùng MediaSource + SourceBuffer hoặc Web Audio API
+	}
+	if (payload.type === "log") {
+		console.debug("stream-log", payload);
+	}
+};
+```
+
+- **Gợi ý phát audio dần**:
+	1. Tạo `MediaSource` + `SourceBuffer` (`audio/mpeg`) và nối từng buffer sau khi nhận được chunk.
+	2. Hoặc giải mã từng chunk bằng `AudioContext.decodeAudioData` rồi phát nối tiếp.
+
+- **Kiểm tra nhanh không cần API thật**: đặt `STREAMING_FAKE_MODE=1` (mặc định phát 2 chunk text/audio) để test client hoặc chạy unit test `tests/test_streaming.py`.
 
 7) Lưu ý bảo mật & cấu hình
 - Không commit secrets vào git. Dùng biến môi trường (CI/CD) hoặc vault.
 - `.env.example` phải đủ biến để người khác thiết lập nhanh.
 - Bật HTTPS khi chạy production; thiết lập CORS/headers chặt chẽ.
 - Xem lại OAuth (Google/GitHub): `redirect URIs`, `scopes`, `state/nonce`, PKCE (nếu cần).
+- Thiết lập thêm cho streaming: `GEMINI_KEY`, `EDGE_TTS_VOICE`, `STREAMING_FAKE_MODE` (nếu cần thử nghiệm offline).
 
 8) GitFlow và quy trình release
 - Nhánh `main` giữ trạng thái phát hành ổn định.

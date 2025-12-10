@@ -31,19 +31,23 @@ def _verify_signed(cookie_value: Optional[str], expected: Optional[str]) -> bool
     return hmac.compare_digest(sig, calc) and hmac.compare_digest(val, expected)
 
 
-def build_state(provider: str) -> str:
-    payload = {"p": provider, "nonce": secrets.token_urlsafe(8)}
+def build_state(provider: str, web_nonce: Optional[str] = None) -> str:
+    payload: Dict[str, Any] = {"p": provider, "nonce": secrets.token_urlsafe(8)}
+    if web_nonce:
+        payload["w"] = web_nonce
     return jwt.encode(payload, SECRET_FOR_STATE, algorithm=ALGORITHM)
 
 
-def verify_state(state: Optional[str], expected_provider: str) -> bool:
+def verify_state(state: Optional[str], expected_provider: str) -> Optional[Dict[str, Any]]:
     if not state:
-        return False
+        return None
     try:
         data = jwt.decode(state, SECRET_FOR_STATE, algorithms=[ALGORITHM])
-        return data.get("p") == expected_provider
     except JWTError:
-        return False
+        return None
+    if data.get("p") != expected_provider:
+        return None
+    return data
 
 
 def set_state_cookie(response, state: str):
@@ -111,13 +115,13 @@ def _code_challenge(verifier: str) -> str:
     return base64.urlsafe_b64encode(digest).decode("ascii").rstrip("=")
 
 
-def google_auth_url() -> Tuple[str, str, str, str]:
+def google_auth_url(web_nonce: Optional[str] = None) -> Tuple[str, str, str, str]:
     client_id = env_str("GOOGLE_CLIENT_ID")
     redirect_uri = env_str("GOOGLE_REDIRECT_URI")
     if not client_id or not redirect_uri:
         raise RuntimeError("Missing GOOGLE_CLIENT_ID/GOOGLE_REDIRECT_URI")
     scope = "openid email profile"
-    state = build_state("google")
+    state = build_state("google", web_nonce=web_nonce)
     nonce = secrets.token_urlsafe(12)
     code_verifier = _code_verifier()
     code_challenge = _code_challenge(code_verifier)
@@ -178,12 +182,12 @@ async def google_userinfo(access_token: str) -> Dict[str, Any]:
 
 # -------------------- GitHub OAuth --------------------
 
-def github_auth_url() -> Tuple[str, str]:
+def github_auth_url(web_nonce: Optional[str] = None) -> Tuple[str, str]:
     client_id = env_str("GITHUB_CLIENT_ID")
     redirect_uri = env_str("GITHUB_REDIRECT_URI")
     if not client_id or not redirect_uri:
         raise RuntimeError("Missing GITHUB_CLIENT_ID/GITHUB_REDIRECT_URI")
-    state = build_state("github")
+    state = build_state("github", web_nonce=web_nonce)
     from urllib.parse import urlencode
     params = urlencode({
         "client_id": client_id,
