@@ -824,6 +824,30 @@
             tts: { start: null, end: null }
         };
 
+        const MESSAGE_TYPE_COLORS = {
+            transcript_partial: '#ffc107',
+            transcript_final: '#4caf50',
+            processing_started: '#ff9800',
+            response: '#1db954',
+            audio_ready: '#03a9f4',
+            ready_for_input: '#1976d2',
+            audio_chunk: '#29b6f6',
+            error: '#e57373'
+        };
+
+        function updateLastMessageType(type, detail) {
+            if (!debugLastMsgType) return;
+            const label = type || 'unknown';
+            let suffix = '';
+            if (detail) {
+                const strDetail = String(detail);
+                const trimmed = strDetail.length > 80 ? strDetail.slice(0, 77) + '...' : strDetail;
+                suffix = ` – ${trimmed}`;
+            }
+            debugLastMsgType.textContent = label + suffix;
+            debugLastMsgType.style.color = MESSAGE_TYPE_COLORS[label] || '#4fc3f7';
+        }
+
         function log(text, type = 'info') {
             const entry = document.createElement('div');
             entry.className = `log-entry log-${type}`;
@@ -1129,6 +1153,9 @@
                 ws.onmessage = async (event) => {
                     if (event.data instanceof Blob) {
                         const audioBlob = event.data;
+                        debugMessageCount++;
+                        debugMsgCount.textContent = debugMessageCount;
+                        updateLastMessageType('audio_chunk', `${(audioBlob.size / 1024).toFixed(1)} KB`);
                         const audioUrl = URL.createObjectURL(audioBlob);
 
                         // Stop any previous TTS playback to avoid overlapping audio
@@ -1171,8 +1198,8 @@
                         // Debug: Log all WebSocket messages
                         debugMessageCount++;
                         debugMsgCount.textContent = debugMessageCount;
-                        debugLastMsgType.textContent = data.type;
-                        debugLastMsgType.style.color = '#4fc3f7';
+                        const detailForType = data.type === 'error' ? (data.message || '') : undefined;
+                        updateLastMessageType(data.type || 'unknown', detailForType);
                         
                         const debugSTT = document.getElementById('debugSTT');
                         const debugEntry = document.createElement('div');
@@ -1285,6 +1312,21 @@
                             log(`Audio ready (${data.latency}ms)`, 'success');
                             ttsStatus.textContent = '✅ TTS done';
                             ttsStatus.style.background = '#c8e6c9';
+                        } else if (data.type === 'error') {
+                            aiProcessing = false;
+                            debugProcessingStatus.textContent = 'No';
+                            debugProcessingStatus.style.color = '#e57373';
+                            const errorMsg = data.message || 'Đã xảy ra lỗi không xác định.';
+                            log(`❌ Backend error: ${errorMsg}`, 'error');
+                            addDebugError(errorMsg);
+                            updateAITask('⚠️ Gặp lỗi: ' + errorMsg);
+                            updateLastMessageType('error', errorMsg);
+                            ttsStatus.textContent = `❌ ${errorMsg}`;
+                            ttsStatus.style.background = '#ffcdd2';
+                            updateProcessFlow(2, 'end');
+                            hidePanel(processFlow);
+                            btnRecord.disabled = false;
+                            btnStop.disabled = true;
                         } else if (data.type === 'ready_for_input') {
                             aiProcessing = false;
                             debugProcessingStatus.textContent = 'No';

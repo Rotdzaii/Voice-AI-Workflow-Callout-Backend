@@ -90,11 +90,48 @@ origins = [
 print(f"🔒 CORS Configured for: {origins}")
 
 app.add_middleware(
-    try:
-        with open("frontend/chat_test.html", "r", encoding="utf-8") as f:
-            return HTMLResponse(content=f.read())
-    except Exception:
-        return HTMLResponse(content="<h1>Chat test not found</h1>", status_code=404)
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+    expose_headers=["x-system-status"],
+)
+
+app.include_router(rag_api.router, prefix="/rag")
+app.include_router(workflows_router.router)
+
+stream_router = APIRouter(prefix="/stream", tags=["streaming"])
+
+
+@stream_router.post("/sse")
+async def stream_sse(body: models.StreamRequest):
+    llm, vectorstore = rag_api._ensure_rag()
+    k = body.k or int(os.environ.get("MAX_RETRIEVED_CHUNKS", 3))
+
+    t_retr_start = time.time()
+    docs_scores = vectorstore.similarity_search_with_score(body.question, k=k)
+    latency_retriever = time.time() - t_retr_start
+    if not docs_scores:
+        raise HTTPException(status_code=503, detail="No context available for streaming response")
+
+    docs = [d for d, _ in docs_scores]
+    scores = [float(s) for _, s in docs_scores]
+
+    t_ctx_start = time.time()
+    context = "\n\n".join(
+        f"[id={d.metadata.get('id')} | group={d.metadata.get('group')} | topic={d.metadata.get('topic')}] {d.page_content}"
+        for d in docs
+    )
+    latency_context = time.time() - t_ctx_start
+
+    rag_module = import_module("rag.rag")
+    prompt = rag_module.BASE_PROMPT.format(context=context, question=body.question)
+
+    metadata = StreamMetadata(
+        question=body.question,
+        source_ids=[d.metadata.get("id") for d in docs],
+        groups=[d.metadata.get("group") for d in docs],
         topics=[d.metadata.get("topic") for d in docs],
         scores=scores,
         latencies={
@@ -126,44 +163,37 @@ async def chat_test() -> HTMLResponse:
         with open("frontend/chat_test.html", "r", encoding="utf-8") as fp:
             return HTMLResponse(content=fp.read())
     except Exception:
-<<<<<<< HEAD
         return HTMLResponse(content="<h1>Chat test not found</h1>", status_code=404)
 
 
 @app.get("/voice", response_class=HTMLResponse)
-async def voice_test():
-    """Serve voice AI demo UI"""
+async def voice_test() -> HTMLResponse:
+    """Serve voice AI demo UI."""
     try:
-        with open("frontend/voice_test.html", "r", encoding="utf-8") as f:
-            return HTMLResponse(content=f.read())
+        with open("frontend/voice_test.html", "r", encoding="utf-8") as fp:
+            return HTMLResponse(content=fp.read())
     except Exception:
         return HTMLResponse(content="<h1>Voice test not found</h1>", status_code=404)
 
 
 @app.get("/voice_ai", response_class=HTMLResponse)
-async def voice_ai():
-    """Serve modern voice AI UI"""
+async def voice_ai() -> HTMLResponse:
+    """Serve modern voice AI UI."""
     try:
-        with open("frontend/voice_ai.html", "r", encoding="utf-8") as f:
-            return HTMLResponse(content=f.read())
+        with open("frontend/voice_ai.html", "r", encoding="utf-8") as fp:
+            return HTMLResponse(content=fp.read())
     except Exception:
         return HTMLResponse(content="<h1>Voice AI not found</h1>", status_code=404)
 
 
 @app.get("/stt_test", response_class=HTMLResponse)
-async def stt_test():
-    """Serve STT testing UI"""
+async def stt_test() -> HTMLResponse:
+    """Serve STT testing UI."""
     try:
-        with open("frontend/stt_test.html", "r", encoding="utf-8") as f:
-            return HTMLResponse(content=f.read())
+        with open("frontend/stt_test.html", "r", encoding="utf-8") as fp:
+            return HTMLResponse(content=fp.read())
     except Exception:
         return HTMLResponse(content="<h1>STT test not found</h1>", status_code=404)
-
-
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")
-=======
-        return HTMLResponse("<h1>Chat test not found</h1>", status_code=404)
->>>>>>> origin/develop
 
 
 @app.post("/auth/token", response_model=models.Token)
@@ -607,6 +637,11 @@ async def get_call_logs(call_id: str, limit: int | None = None):
     ]
 
 
+@app.websocket("/ws/call/audio")
+async def ws_call_audio(websocket: WebSocket, call_id: str | None = None):
+    await voice_stream.voice_stream_handler(websocket, call_id)
+
+
 @app.websocket("/ws/calls/{call_id}/logs")
 async def ws_call_logs(websocket: WebSocket, call_id: str):
     await websocket.accept()
@@ -679,5 +714,22 @@ async def ws_call_logs(websocket: WebSocket, call_id: str):
             return
 
 
+def _callback_html_success(provider: str, token: str, web_nonce: str | None = None) -> str:
+    nonce = web_nonce or ""
+    allowed_origin = "*"
+    if nonce and ":" in nonce:
+        allowed_origin = nonce
+        nonce = ""
+    tmpl = Template(
+        """<!doctype html>\n<html><head><meta charset='utf-8'><title>Login Success</title></head>\n<body>\n<script>\n    try {\n        if (window.opener) {\n            window.opener.postMessage({"type":"oauth","provider":"$provider","ok":true,"token":"$token","web_nonce":"$web_nonce"}, "$target");\n        }\n    } catch (e) {}\n    window.close();\n    document.body.innerText = 'You can close this window.';\n</script>\n</body></html>"""
+    )
+    return tmpl.substitute(provider=provider, token=token, web_nonce=nonce, target=allowed_origin)
+
+
 def _callback_html_error(provider: str, message: str) -> str:
+    msg = escape(message or "unknown error")
+    tmpl = Template(
+        """<!doctype html>\n<html><head><meta charset='utf-8'><title>Login Error</title></head>\n<body>\n<script>\n    try {\n        if (window.opener) {\n            window.opener.postMessage({"type":"oauth","provider":"$provider","ok":false,"error":"$msg"}, "*");\n        }\n    } catch (e) {}\n    document.body.innerText = 'OAuth failed: $msg';\n</script>\n</body></html>"""
+    )
+    return tmpl.substitute(provider=provider, msg=msg)
 

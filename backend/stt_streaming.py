@@ -2,11 +2,15 @@
 import asyncio
 import logging
 from typing import AsyncGenerator
-from google.cloud import speech
 import queue
 import threading
 import shutil
 import os
+
+try:
+    from google.cloud import speech_v1p1beta1 as speech  # type: ignore
+except Exception:  # pragma: no cover - dependency optional
+    speech = None  # type: ignore
 
 logger = logging.getLogger(__name__)
 
@@ -27,6 +31,11 @@ async def transcribe_streaming(
     Yields:
         Transcription results with text, is_final, confidence
     """
+    if speech is None:
+        logger.error("google-cloud-speech not installed; cannot use streaming STT")
+        yield {"ok": False, "error": "google-cloud-speech not installed"}
+        return
+
     client = speech.SpeechClient()
     
     # Thread-safe queues

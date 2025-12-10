@@ -13,7 +13,20 @@ Mục tiêu: Tài liệu này giúp nắm nhanh toàn cảnh dự án, cách ch�
 - Làm sạch lịch sử git cũ, push lại toàn bộ project lên GitLab.
 - Tạo tag đánh dấu trạng thái giai đoạn 1: `Phase-1`.
 
-2) Khởi động nhanh trên Windows
+2) Yêu cầu cài đặt & phụ thuộc
+- **Backend**
+	- Python 3.13.7, `pip`, và `ffmpeg` có trong `PATH` (dùng để giải mã audio realtime).
+	- Cài deps: `pip install -r requirements.txt` (danh sách đã bao gồm `langchain-chroma`, `google-cloud-speech`, `google-cloud-texttospeech`, `webrtcvad`, ...).
+	- Trên Windows cần cài **Microsoft Visual C++ Build Tools** (chọn workload “Desktop development with C++”) trước khi chạy `pip install` để build được `webrtcvad`.
+	- Biến môi trường quan trọng: `DATABASE_URL`, `SUPABASE_JWT_SECRET`, `GEMINI_API_KEY`, `GOOGLE_APPLICATION_CREDENTIALS` (trỏ tới file service-account JSON dùng cho Google STT/TTS), `TTS_STORAGE`, `AUDIO_OUTPUT_DIR` (nếu cần lưu audio).
+	- Nếu cần streaming thoại 2 chiều: bật `STT_USE_FFMPEG=1` và đảm bảo `ffmpeg` được cài.
+- **Frontend (Vite/React)**
+	- Node.js 18+ và `npm` hoặc `pnpm`.
+	- `cd Frontend && npm install` để kéo toàn bộ packages (bao gồm Tailwind, react-icons, v.v.).
+	- Thêm script `"dev": "vite"` (hoặc lệnh tương đương) trong `package.json`, sau đó chạy `npm run dev` để khởi động UI cục bộ.
+	- `.env` frontend (ví dụ `.env.local`) cần `VITE_API_BASE_URL`, `VITE_WS_URL` để khớp backend.
+
+3) Khởi động nhanh trên Windows
 - Tạo và kích hoạt môi trường ảo, cài dependencies, cấu hình `.env`, chạy backend.
 
 Lệnh mẫu (PowerShell):
@@ -41,7 +54,7 @@ Kiểm tra nhanh:
 - Truy cập `http://localhost:8000/health` để xem tình trạng.
 - Truy cập `http://localhost:8000/docs` để mở Swagger UI.
 
-3) Database & Supabase
+4) Database & Supabase
 - Khởi động Postgres bằng Docker Compose (tuỳ bạn dùng Docker Desktop):
 
 ```powershell
@@ -57,18 +70,18 @@ docker compose up -d
 	- Mở Supabase Studio → "SQL" → "New query" → dán nội dung `voiceai_schema_combined.sql` → Run.
 	- Lấy `DATABASE_URL` và `SUPABASE_JWT_SECRET` từ Supabase, điền vào `.env`.
 
-4) Chạy test
+5) Chạy test
 ```powershell
 .\.venv\Scripts\Activate.ps1
 pytest -q
 ```
 
-5) Triển khai với Railway
+6) Triển khai với Railway
 - Đảm bảo có `Procfile`, `railway.json` (nếu dùng).
 - Khai báo biến môi trường bắt buộc trong Railway Settings.
 - Deploy, sau đó kiểm tra các endpoint: `/health`, `/docs`, `/debug/db_ping`.
 
-6) Các endpoint chính
+7) Các endpoint chính
 - Đăng ký/Đăng nhập: `/auth/register`, `/auth/token`.
 - Quản lý workflow: `/workflows`, `/workflows/{id}`.
 - Quản lý cuộc gọi: `/call/start`, `/call/reply`, `/calls/{call_id}/logs`, `/ws/calls/{call_id}/logs`.
@@ -125,24 +138,24 @@ es.onmessage = (evt) => {
 
 - **Kiểm tra nhanh không cần API thật**: đặt `STREAMING_FAKE_MODE=1` (mặc định phát 2 chunk text/audio) để test client hoặc chạy unit test `tests/test_streaming.py`.
 
-7) Lưu ý bảo mật & cấu hình
+8) Lưu ý bảo mật & cấu hình
 - Không commit secrets vào git. Dùng biến môi trường (CI/CD) hoặc vault.
 - `.env.example` phải đủ biến để người khác thiết lập nhanh.
 - Bật HTTPS khi chạy production; thiết lập CORS/headers chặt chẽ.
 - Xem lại OAuth (Google/GitHub): `redirect URIs`, `scopes`, `state/nonce`, PKCE (nếu cần).
 - Thiết lập thêm cho streaming: `GEMINI_KEY`, `EDGE_TTS_VOICE`, `STREAMING_FAKE_MODE` (nếu cần thử nghiệm offline).
 
-8) GitFlow và quy trình release
+9) GitFlow và quy trình release
 - Nhánh `main` giữ trạng thái phát hành ổn định.
 - Làm việc trên nhánh `feature/*`, hợp nhất vào `develop` bằng merge không fast-forward.
 - Tạo MR `develop → main` để review/duyệt trước khi phát hành.
 - Gắn tag cho các mốc: `Phase-1`, `Phase-2`,...
 
-9) Sự cố thường gặp
+10) Sự cố thường gặp
 - Port 8000 bị chiếm: đổi `--port`, hoặc tắt tiến trình cũ.
 - DB không kết nối: kiểm tra `DATABASE_URL`, firewall, và quyền user.
 - Test flakey: tăng timeout, kiểm tra pool size, chạy lại sau khi làm sạch DB.
 
-10) Liên hệ/đóng góp
+11) Liên hệ/đóng góp
 - Mở issue/MR trên GitLab để báo lỗi hoặc đề xuất.
 - Đính kèm log/ảnh màn hình khi báo lỗi để dễ tái hiện.
